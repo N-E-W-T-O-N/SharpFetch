@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SharpFetch.Aot/SharpFetch.Aot.csproj" />
+  <Project Path="SharpFetch/SharpFetch.csproj" />
+</Solution>
