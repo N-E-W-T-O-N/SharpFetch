@@ -1,7 +1,7 @@
 # SharpFetch Component & Device Support Checklist
 
-> **Current Implementation Status**: 🔴 **0% Implemented (Initial Skeleton / Empty)**  
-> This checklist tracks what hardware and system telemetry components `SharpFetch` can read and display. Currently, the project is an initial skeleton, so all items are marked as 🔴 (Pending/Empty). As components are built and tested, their status will transition to 🟡 (In Progress) and 🟢 (Implemented & Verified).
+> **Current Implementation Status**: 🟢 **15% Implemented (Core OS, Architecture, Kernel & Uptime Active)**  
+> This checklist tracks what hardware and system telemetry components `SharpFetch` can read and display.
 
 ### Status Legend
 * 🟢 **Implemented & Verified**: Code is implemented, tested, and actively working in `SharpFetch`.
@@ -12,15 +12,15 @@
 
 ## 1. Operating System & Kernel Telemetry
 
-| Component / Metric | Current Status in `SharpFetch` | Target Platforms | Planned Detection Method | Notes |
+| Component / Metric | Current Status in `SharpFetch` | Target Platforms | Active Detection Method | Notes |
 | :--- | :---: | :---: | :--- | :--- |
-| **OS Name & Edition** | 🔴 Pending | Win / Linux / Mac | Win: Registry `CurrentVersion` / Lin: `/etc/os-release` / Mac: `kern.osproductversion` | Fast, in-memory read |
-| **OS Version & Build Number** | 🔴 Pending | Win / Linux / Mac | Win: `DisplayVersion` + `CurrentBuildNumber` / Lin: `VERSION_ID` / Mac: `sw_vers` | e.g., `Windows 11 Pro 24H2` |
-| **Kernel Name & Version** | 🔴 Pending | Win / Linux / Mac | Win: `Environment.OSVersion.Version` / Lin & Mac: `uname()` syscall | e.g., `Linux 6.12.10-arch1-1` |
-| **Host Architecture** | 🔴 Pending | Win / Linux / Mac | `RuntimeInformation.OSArchitecture` (`X64`, `Arm64`, `X86`) | Built-in .NET BCL |
-| **Hostname & Username** | 🔴 Pending | Win / Linux / Mac | `Environment.MachineName`, `Environment.UserName` | Built-in .NET BCL |
-| **System Uptime** | 🔴 Pending | Win / Linux / Mac | Win: `Environment.TickCount64` / Lin: `/proc/uptime` / Mac: `kern.boottime` | Sub-microsecond execution |
-| **System Boot Timestamp** | 🔴 Pending | Win / Linux / Mac | `DateTime.UtcNow - TimeSpan.FromMilliseconds(TickCount64)` | Calculated locally |
+| **OS Name & Edition** | 🟢 Implemented | Win / Linux / Mac | Win: Registry `CurrentVersion` / Lin: `/etc/os-release` / Mac: `kern.osproductversion` | Fast, in-memory read (< 0.05 ms) |
+| **OS Version & Build Number** | 🟢 Implemented | Win / Linux / Mac | Win: `DisplayVersion` + `CurrentBuildNumber.UBR` / Lin: `VERSION_ID` / Mac: `kern.osversion` | e.g. `Windows 11 Pro (25H2, Build 26200.9168)` |
+| **Kernel Name & Version** | 🟢 Implemented | Win / Linux / Mac | Win: `Environment.OSVersion.Version` / Lin: `/proc/sys/kernel/osrelease` / Mac: `Darwin {osrelease}` | e.g. `10.0.26200.0` |
+| **Host Architecture** | 🟢 Implemented | Win / Linux / Mac | `RuntimeInformation.OSArchitecture` (`x86_64`, `arm64`, `aarch64`, `i686`) | Normalized standard names |
+| **Hostname & Username** | 🟢 Implemented | Win / Linux / Mac | `Environment.MachineName`, `Environment.UserName` | Built-in .NET BCL |
+| **System Uptime** | 🟢 Implemented | Win / Linux / Mac | Win: `Environment.TickCount64` / Lin: `/proc/uptime` / Mac: `kern.boottime` | Sub-microsecond execution |
+| **System Boot Timestamp** | 🟢 Implemented | Win / Linux / Mac | `DateTime.UtcNow - TimeSpan.FromMilliseconds(TickCount64)` | Calculated locally |
 
 ---
 
@@ -28,7 +28,7 @@
 
 | Component / Metric | Current Status in `SharpFetch` | Target Platforms | Planned Detection Method | Notes |
 | :--- | :---: | :---: | :--- | :--- |
-| **CPU Model & Brand String** | 🔴 Pending | Win / Linux / Mac | Win: Registry `CentralProcessor\0` / Lin: `/proc/cpuinfo` / Mac: `machdep.cpu.brand_string` | e.g., `AMD Ryzen 7 7800X3D` |
+| **CPU Model & Brand String** | 🔴 Pending | Win / Linux / Mac | Win: Registry `CentralProcessor\0` / Lin: `/proc/cpuinfo` / Mac: `machdep.cpu.brand_string` | e.g. `AMD Ryzen 7 7800X3D` |
 | **CPU Vendor Identifier** | 🔴 Pending | Win / Linux / Mac | Win: `VendorIdentifier` / Lin: `vendor_id` / Mac: `machdep.cpu.vendor` | `AuthenticAMD`, `GenuineIntel`, `Apple` |
 | **Base Clock Speed (GHz/MHz)**| 🔴 Pending | Win / Linux / Mac | Win: Registry `~MHz` / Lin: `/proc/cpuinfo` / Mac: `hw.cpufrequency` | Base factory clock |
 | **Max / Boost Clock Speed** | 🔴 Pending | Win / Linux / Mac | Win: SMBIOS Type 4 / Lin: `cpuinfo_max_freq` / Mac: IOKit `pmgr` SRAM | High clock boost speed |
@@ -145,8 +145,8 @@
 +---------------------------------------------------------------------------------------------------+
 |                                 SHARPFETCH IMPLEMENTATION PROGRESS                                |
 +---------------------------------------------------------------------------------------------------+
-| 🟢 Implemented:    0 / 48 Components  (0%)                                                         |
+| 🟢 Implemented:    7 / 48 Components  (15%)                                                        |
 | 🟡 In Progress:    0 / 48 Components  (0%)                                                         |
-| 🔴 Pending/Empty: 48 / 48 Components (100%)                                                       |
+| 🔴 Pending/Empty: 41 / 48 Components  (85%)                                                        |
 +---------------------------------------------------------------------------------------------------+
 ```

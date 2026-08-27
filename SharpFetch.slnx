@@ -1,5 +1,8 @@
 <Solution>
-  <Project Path="BenchMark/BenchMark.csproj" />
-  <Project Path="SharpFetch.Aot/SharpFetch.Aot.csproj" />
-  <Project Path="SharpFetch/SharpFetch.csproj" />
+  <Folder Name="/docs/" />
+  <Project Path="src/SharpFetch.Abstractions/SharpFetch.Abstractions.csproj" />
+  <Project Path="src/SharpFetch.BenchMark/BenchMark.csproj" />
+  <Project Path="src/SharpFetch.Cli/SharpFetch.Cli.csproj" />
+  <Project Path="src/SharpFetch.Core/SharpFetch.Core.csproj" />
+  <Project Path="src/SharpFetch.UI/SharpFetch.UI.csproj" />
 </Solution>
