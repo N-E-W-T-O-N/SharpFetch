@@ -1,5 +1,17 @@
 <Solution>
-  <Folder Name="/docs/" />
+  <Folder Name="/docs/">
+    <File Path="docs/DEPENDENCIES.md" />
+    <File Path="docs/DOTNET_ECOSYSTEM_ANALYSIS.md" />
+    <File Path="docs/LINUX_MACOS_PERFORMANCE_COMPARISON.md" />
+    <File Path="docs/WINDOWS_PERFORMANCE_COMPARISON.md" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+    <File Path="OBSERVATIONS.md" />
+  </Folder>
   <Project Path="src/SharpFetch.Abstractions/SharpFetch.Abstractions.csproj" />
   <Project Path="src/SharpFetch.BenchMark/BenchMark.csproj" />
   <Project Path="src/SharpFetch.Cli/SharpFetch.Cli.csproj" />
