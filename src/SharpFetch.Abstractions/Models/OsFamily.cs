@@ -6,5 +6,6 @@ public enum OsFamily
     Linux,
     MacOS,
     FreeBSD,
+    Android,
     Unknown
 }

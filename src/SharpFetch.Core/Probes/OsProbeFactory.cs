@@ -11,6 +11,13 @@ public static class OsProbeFactory
             return new WindowsOsProbe();
         }
 
+        // Checked before Linux: Android is Linux-based, so a Linux-first
+        // order would shadow this branch entirely.
+        if (OperatingSystem.IsAndroid())
+        {
+            return new AndroidProbe();
+        }
+
         if (OperatingSystem.IsLinux())
         {
             return new LinuxOsProbe();
