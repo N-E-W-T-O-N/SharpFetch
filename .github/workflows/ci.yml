@@ -1,0 +1,227 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege by default; jobs opt into more only if they need it.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  spellcheck:
+    name: Spellcheck
+    runs-on: ubuntu-22.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: install codespell
+        run: |
+          pip3 install codespell
+          codespell --version
+
+      - name: run codespell
+        run: codespell
+
+  # Build + test on every host OS/arch combination that .NET officially supports
+  # and GitHub provides a runner for.
+  build-test:
+    name: Build-${{ matrix.name }}
+    needs: spellcheck
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x64
+            runs-on: ubuntu-22.04
+          - name: linux-arm64
+            runs-on: ubuntu-22.04-arm
+          - name: windows-x64
+            runs-on: windows-latest
+          - name: windows-arm64
+            runs-on: windows-11-arm
+          - name: macos-arm64
+            runs-on: macos-latest
+          - name: macos-x64
+            runs-on: macos-15-intel
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          # global.json pins the SDK feature band; also install the down-level
+          # runtimes so multi-targeted net8.0/net9.0 test assemblies can run.
+          global-json-file: global.json
+          dotnet-version: |
+            8.0.x
+            9.0.x
+
+      - name: dotnet info
+        run: dotnet --info
+
+      - name: restore
+        run: dotnet restore SharpFetch.slnx
+
+      - name: build
+        run: dotnet build SharpFetch.slnx -c Release --no-restore
+
+      - name: test
+        shell: bash
+        run: |
+          testprojs=$(find src tests -name '*.csproj' 2>/dev/null | grep -iE '(test|spec)' || true)
+          if [ -z "$testprojs" ]; then
+            echo "::notice title=No tests::Solution contains no test projects - skipping dotnet test."
+          else
+            dotnet test SharpFetch.slnx -c Release --no-build --verbosity normal
+          fi
+
+  # Alpine / musl libc is a distinct RID family, not just "another Linux".
+  build-musl:
+    name: Build-musl-${{ matrix.arch }}
+    needs: spellcheck
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runs-on: ubuntu-22.04
+          - arch: arm64
+            runs-on: ubuntu-22.04-arm
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: setup Alpine
+        uses: jirutka/setup-alpine@6c81335ebff01869c49c73f03d8753d6b61c5a12 # v1.4.1
+        with:
+          branch: v3.21
+          packages: dotnet10-sdk bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib
+
+      - name: build (musl)
+        shell: alpine.sh {0}
+        run: |
+          dotnet --info
+          dotnet build SharpFetch.slnx -c Release
+
+  # Native AOT is the shipping mode for SharpFetch, and it cannot cross-compile
+  # across operating systems - so each host OS smoke-tests its own AOT binary.
+  aot-smoke:
+    name: AOT-${{ matrix.rid }}
+    needs: build-test
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            runs-on: ubuntu-22.04
+          - rid: linux-arm64
+            runs-on: ubuntu-22.04-arm
+          - rid: win-x64
+            runs-on: windows-latest
+          - rid: win-arm64
+            runs-on: windows-11-arm
+          - rid: osx-arm64
+            runs-on: macos-latest
+          - rid: osx-x64
+            runs-on: macos-15-intel
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: install AOT toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: publish Native AOT
+        run: >
+          dotnet publish src/SharpFetch.Cli/SharpFetch.Cli.csproj
+          -c Release -f net10.0 -r ${{ matrix.rid }}
+          -p:PublishAot=true -p:PackAsTool=false
+          -o publish/${{ matrix.rid }}
+
+      - name: run the AOT binary
+        shell: bash
+        run: |
+          bin=publish/${{ matrix.rid }}/SharpFetch.Cli
+          [ "${{ runner.os }}" = "Windows" ] && bin="$bin.exe"
+          ls -l publish/${{ matrix.rid }}
+          "./$bin"
+
+  # Compile-verification only. Android/iOS/tvOS/Mac Catalyst/WASM are real .NET
+  # target platforms, but they are app/sandbox platforms with no CLI entry point,
+  # so we prove the probe libraries build for them rather than shipping an exe.
+  platform-targets:
+    name: Platform-${{ matrix.name }}
+    needs: build-test
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: android-wasm
+            runs-on: ubuntu-22.04
+            workloads: android wasm-tools
+          - name: apple-mobile
+            runs-on: macos-latest
+            workloads: ios tvos maccatalyst macos
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: install workloads
+        run: dotnet workload install ${{ matrix.workloads }}
+
+      - name: build probe libraries for platform targets
+        run: >
+          dotnet build src/SharpFetch.Core/SharpFetch.Core.csproj
+          -c Release -p:IncludePlatformTargets=true
+
+  # Android's CLI story is Termux/bionic, which is a plain RID publish rather
+  # than an APK - worth verifying separately from the net10.0-android TFM.
+  android-cli:
+    name: Android-bionic-arm64
+    needs: build-test
+    runs-on: ubuntu-22.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: publish for linux-bionic-arm64
+        run: >
+          dotnet publish src/SharpFetch.Cli/SharpFetch.Cli.csproj
+          -c Release -f net10.0 -r linux-bionic-arm64
+          --self-contained -p:PackAsTool=false
+          -o publish/linux-bionic-arm64
