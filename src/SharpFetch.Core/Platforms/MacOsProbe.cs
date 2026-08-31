@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.MacOS;
+namespace SharpFetch.Core.Platforms;
 
 [SupportedOSPlatform("macos")]
 public sealed partial class MacOsProbe : IOsProbe

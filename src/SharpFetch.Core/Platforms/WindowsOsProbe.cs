@@ -4,7 +4,7 @@ using Microsoft.Win32;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.Windows;
+namespace SharpFetch.Core.Platforms;
 
 [SupportedOSPlatform("windows")]
 public sealed class WindowsOsProbe : IOsProbe

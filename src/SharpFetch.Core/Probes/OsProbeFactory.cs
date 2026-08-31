@@ -1,7 +1,4 @@
-using SharpFetch.Platforms.Common;
-using SharpFetch.Platforms.Linux;
-using SharpFetch.Platforms.MacOS;
-using SharpFetch.Platforms.Windows;
+using SharpFetch.Core.Platforms;
 
 namespace SharpFetch.Core.Probes;
 
