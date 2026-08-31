@@ -21,6 +21,11 @@ public static class OsProbeFactory
             return new MacOsProbe();
         }
 
+        if (OperatingSystem.IsFreeBSD())
+        {
+            return new FreeBSDProbe();
+        }
+
         return new FallbackOsProbe();
     }
 }
