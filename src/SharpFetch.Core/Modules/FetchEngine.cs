@@ -16,6 +16,8 @@ public sealed class FetchEngine
         engine.Register(new TitleModule(probe));
         engine.Register(new OsModule(probe));
         engine.Register(new KernelModule(probe));
+        engine.Register(new CpuModule());
+        engine.Register(new GpuModule());
         engine.Register(new UptimeModule(probe));
 
         return engine;

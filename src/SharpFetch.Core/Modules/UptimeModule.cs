@@ -16,7 +16,7 @@ public sealed class UptimeModule : IFetchModule
         Key: "Uptime",
         DisplayName: "Uptime",
         Description: "Prints system uptime",
-        DefaultOrder: 5,
+        DefaultOrder: 6,
         Icon: ""
     );
 
