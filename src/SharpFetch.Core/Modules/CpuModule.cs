@@ -22,7 +22,7 @@ public sealed class CpuModule : IFetchModule
 
     public bool IsSupported => _probe is not null;
 
-    public ModuleResult Fetch()
+    public IReadOnlyList<ModuleResult> Fetch()
     {
         CpuInfo cpu = _probe!.Detect();
 
@@ -36,6 +36,6 @@ public sealed class CpuModule : IFetchModule
             formatted += $" @ {freq / 1000.0:0.00} GHz";
         }
 
-        return new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, cpu);
+        return [new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, cpu)];
     }
 }

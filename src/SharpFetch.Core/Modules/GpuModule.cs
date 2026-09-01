@@ -22,7 +22,7 @@ public sealed class GpuModule : IFetchModule
 
     public bool IsSupported => _probe is not null;
 
-    public ModuleResult Fetch()
+    public IReadOnlyList<ModuleResult> Fetch()
     {
         IReadOnlyList<GpuAdapterInfo> adapters = _probe!.Detect();
 
@@ -30,7 +30,7 @@ public sealed class GpuModule : IFetchModule
             ? "None detected"
             : string.Join(", ", adapters.Select(FormatAdapter));
 
-        return new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, adapters);
+        return [new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, adapters)];
     }
 
     private static string FormatAdapter(GpuAdapterInfo adapter)

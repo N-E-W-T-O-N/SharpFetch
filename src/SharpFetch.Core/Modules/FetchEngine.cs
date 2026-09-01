@@ -18,6 +18,9 @@ public sealed class FetchEngine
         engine.Register(new KernelModule(probe));
         engine.Register(new CpuModule());
         engine.Register(new GpuModule());
+        engine.Register(new MemoryModule());
+        engine.Register(new SwapModule());
+        engine.Register(new DiskModule());
         engine.Register(new UptimeModule(probe));
 
         return engine;
@@ -33,7 +36,7 @@ public sealed class FetchEngine
         return _modules
             .Where(m => m.IsSupported)
             .OrderBy(m => m.Metadata.DefaultOrder)
-            .Select(m => m.Fetch())
+            .SelectMany(m => m.Fetch())
             .ToList();
     }
 }

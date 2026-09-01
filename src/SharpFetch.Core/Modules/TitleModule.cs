@@ -22,10 +22,10 @@ public sealed class TitleModule : IFetchModule
 
     public bool IsSupported => true;
 
-    public ModuleResult Fetch()
+    public IReadOnlyList<ModuleResult> Fetch()
     {
         OsInfo os = _probe.Detect();
         string title = $"{os.Username}@{os.Hostname}";
-        return new ModuleResult(Metadata.Key, Metadata.DisplayName, title, os);
+        return [new ModuleResult(Metadata.Key, Metadata.DisplayName, title, os)];
     }
 }

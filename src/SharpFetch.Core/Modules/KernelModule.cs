@@ -22,9 +22,9 @@ public sealed class KernelModule : IFetchModule
 
     public bool IsSupported => true;
 
-    public ModuleResult Fetch()
+    public IReadOnlyList<ModuleResult> Fetch()
     {
         OsInfo os = _probe.Detect();
-        return new ModuleResult(Metadata.Key, Metadata.DisplayName, os.Kernel, os);
+        return [new ModuleResult(Metadata.Key, Metadata.DisplayName, os.Kernel, os)];
     }
 }
