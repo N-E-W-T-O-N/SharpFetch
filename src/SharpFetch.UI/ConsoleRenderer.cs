@@ -8,7 +8,7 @@ public static class ConsoleRenderer
 {
     public static void Render(OsInfo os, IReadOnlyList<ModuleResult> results)
     {
-        var (logoLines, accentColor) = AsciiArt.GetLogo(os);
+        var (logoLines, accentColor) = AsciiArt.GetLogo(os.Family, os.Name);
 
         var table = new Table
         {

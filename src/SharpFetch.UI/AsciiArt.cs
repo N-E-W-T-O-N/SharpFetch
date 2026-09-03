@@ -4,18 +4,21 @@ namespace SharpFetch.UI;
 
 public static class AsciiArt
 {
-    public static (string[] lines, string accentColor) GetLogo(OsInfo os)
+    public static (string[] lines, string accentColor) GetLogo(OsFamily family, ReadOnlySpan<char> osName)
     {
-        return os.Family switch
+        string name = osName.ToString().ToLowerInvariant();
+        return family switch
         {
-            OsFamily.Windows => GetWindowsLogo(os),
-            OsFamily.Linux => GetLinuxLogo(os),
+            OsFamily.Windows => GetWindowsLogo(),
+            OsFamily.Linux => GetLinuxLogo(name),
             OsFamily.MacOS => GetMacLogo(),
+            OsFamily.FreeBSD => GetLinuxLogo(name),
+            OsFamily.Android => GetLinuxLogo(name),
             _ => GetGenericLogo()
         };
     }
 
-    private static (string[] lines, string accentColor) GetWindowsLogo(OsInfo os)
+    private static (string[] lines, string accentColor) GetWindowsLogo()
     {
         // Modern Windows 11/10 4-quadrant style
         string[] lines =
@@ -38,9 +41,9 @@ public static class AsciiArt
         return (lines, "cyan1");
     }
 
-    private static (string[] lines, string accentColor) GetLinuxLogo(OsInfo os)
+    private static (string[] lines, string accentColor) GetLinuxLogo(string nameLower)
     {
-        string nameLower = os.Name.ToLowerInvariant();
+        
 
         if (nameLower.Contains("arch"))
         {
@@ -71,6 +74,84 @@ public static class AsciiArt
             return (ubuntuLines, "orange3");
         }
 
+        if(nameLower.Contains("debian"))
+        {
+            string[] debianLines =
+            [
+                "[red]      _,met$$$$$gg.       [/]",
+                "[red]   ,g$$$$$$$$$$$$$$$P.    [/]",
+                "[red] ,g$$P\"\"       \"\"Y$$.\".   [/]",
+                "[red],$$P'              `$$$.  [/]",
+                "[red']$$P       ,ggs.     `$$b: [/]",
+                "[red']d$$'     ,$P\"'   .    $$$ [/]",
+                "[red']d$$'   ,$P'     ,    $$P [/]",
+                "[red']d$$'  ,$P      ,     $$P [/]",
+                "[red']d$$'  d$'     ,      $$P [/]",
+                "[red']d$$'  $$.   -\"      $$P [/]",
+                "[red']d$$'  `Y$b._       ,d$P' [/]",
+                "[red']d$$'    `\"Y$$$$$$$$$P\"'  [/]"
+            ];
+            return (debianLines, "red");
+        }
+
+        if(nameLower.Contains("fedora"))
+        {
+            string[] fedoraLines =
+            [
+               
+            ];
+            return (fedoraLines, "blue");
+        }
+
+        if(nameLower.Contains("gentoo"))
+        {
+            string[] gentooLines =
+            [
+                "[purple]      .'''.       [/]",
+                "[purple]     :_\\/_:      [/]",
+                "[purple] .''.: /\\ :.''.  [/]",
+                "[purple]:_\\/_:'.::.' :  [/]",
+                "[purple]: /\\ : :::::  :  [/]",
+                "[purple] '..'   '::'   '  [/]"
+            ];
+            return (gentooLines, "purple");
+        }
+
+        if(nameLower.Contains("alpine"))
+        {
+            string[] alpineLines =
+            [
+
+            ];
+            return (alpineLines, "green");
+        }
+
+        if (nameLower.Contains("android"))
+        {
+            // Ported from vendored neofetch's Android (bugdroid) ascii_data block.
+            string[] androidLines =
+            [
+                "[green]         -o          o-[/]",
+                "[green]          +hydNNNNdyh+[/]",
+                "[green]        +mMMMMMMMMMMMMm+[/]",
+                "[green]      `dMM[/][white]m:[/][green]NMMMMMMN[/][white]:m[/][green]MMd`[/]",
+                "[green]      hMMMMMMMMMMMMMMMMMMh[/]",
+                "[green]  ..  yyyyyyyyyyyyyyyyyyyy  ..[/]",
+                "[green].mMMm`MMMMMMMMMMMMMMMMMMMM`mMMm.[/]",
+                "[green]:MMMM-MMMMMMMMMMMMMMMMMMMM-MMMM:[/]",
+                "[green]:MMMM-MMMMMMMMMMMMMMMMMMMM-MMMM:[/]",
+                "[green]:MMMM-MMMMMMMMMMMMMMMMMMMM-MMMM:[/]",
+                "[green]:MMMM-MMMMMMMMMMMMMMMMMMMM-MMMM:[/]",
+                "[green]-MMMM-MMMMMMMMMMMMMMMMMMMM-MMMM-[/]",
+                "[green] +yy+ MMMMMMMMMMMMMMMMMMMM +yy+[/]",
+                "[green]      mMMMMMMMMMMMMMMMMMMm[/]",
+                "[green]      `/++MMMMh++hMMMM++/`[/]",
+                "[green]          MMMMo  oMMMM[/]",
+                "[green]          MMMMo  oMMMM[/]",
+                "[green]          oNMm-  -mMNs[/]"
+            ];
+            return (androidLines, "green");
+        }
         // Generic Linux Tux
         string[] tuxLines =
         [
