@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SharpFetch.Abstractions\SharpFetch.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\SharpFetch.Core\SharpFetch.Core.csproj" />
+    <ProjectReference Include="..\..\src\SharpFetch.UI\SharpFetch.UI.csproj" />
+    <ProjectReference Include="..\..\src\SharpFetch.Cli\SharpFetch.Cli.csproj" />
+  </ItemGroup>
+
+</Project>

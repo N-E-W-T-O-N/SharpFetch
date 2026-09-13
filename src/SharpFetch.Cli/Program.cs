@@ -15,7 +15,7 @@ internal class Program
         switch (options.Action)
         {
             case CliAction.ShowVersion:
-                Console.WriteLine("SharpFetch v1.0.0");
+                PrintVersion();
                 return;
 
             case CliAction.ShowHelp:
@@ -26,11 +26,25 @@ internal class Program
                 PrintModuleList();
                 return;
 
+            case CliAction.ShowError:
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"Error: {options.ErrorMessage}");
+                Console.ResetColor();
+                Environment.ExitCode = 1;
+                return;
+
             case CliAction.RunFetch:
             default:
                 RunFetch(options);
                 break;
         }
+    }
+
+    private static void PrintVersion()
+    {
+        var version = typeof(Program).Assembly.GetName().Version;
+        string versionStr = version != null ? $"{version.Major}.{version.Minor}.{version.Build}" : "1.0.0";
+        Console.WriteLine($"SharpFetch v{versionStr}");
     }
 
     private static void RunFetch(CliOptions options)
@@ -72,10 +86,10 @@ internal class Program
             -m, --modules <list>     Comma-separated list of modules to display (e.g. os,cpu,memory)
             --hide <list>            Comma-separated list of modules to hide
             -n, --no-logo            Hide OS ASCII logo
+            --no-color               Disable all ANSI colors
             --no-palette             Hide ANSI color palette blocks
             -l, --logo <name>        Specify custom ASCII logo (e.g. arch, ubuntu, windows, macos, tux, debian)
             --color <name>           Override accent color
-            -c, --config <path>      Path to custom configuration file
         """);
     }
 

@@ -63,14 +63,25 @@ public sealed partial class MacOsGpuProbe : IGpuProbe
                     ? nameEl.GetString() ?? "Unknown GPU"
                     : "Unknown GPU";
 
+                string vendor = "Apple";
+                if (name.Contains("AMD", StringComparison.OrdinalIgnoreCase) || name.Contains("Radeon", StringComparison.OrdinalIgnoreCase))
+                {
+                    vendor = "AMD";
+                }
+                else if (name.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) || name.Contains("GeForce", StringComparison.OrdinalIgnoreCase))
+                {
+                    vendor = "NVIDIA";
+                }
+                else if (name.Contains("Intel", StringComparison.OrdinalIgnoreCase))
+                {
+                    vendor = "Intel";
+                }
+
                 adapters.Add(new GpuAdapterInfo
                 {
                     Index = index++,
                     Name = name,
-                    // system_profiler's vendor field is an opaque localization key
-                    // (e.g. "sppci_vendor_Apple"), not display-ready text; the
-                    // chipset name in `name` already identifies the real vendor.
-                    Vendor = "Apple",
+                    Vendor = vendor,
                     DedicatedVramBytes = FindVramBytes(gpu)
                 });
             }

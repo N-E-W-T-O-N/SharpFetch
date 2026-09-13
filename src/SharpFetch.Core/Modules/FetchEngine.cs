@@ -1,4 +1,3 @@
-using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
 namespace SharpFetch.Core.Modules;
@@ -22,11 +21,6 @@ public sealed class FetchEngine
         engine.Register(new SwapModule());
         engine.Register(new DiskModule());
         engine.Register(new UptimeModule(probe));
-        engine.Register(new CpuModule());
-        engine.Register(new GpuModule());
-        engine.Register(new MemoryModule());
-        engine.Register(new SwapModule());
-        engine.Register(new DiskModule());
 
         return engine;
     }
@@ -46,7 +40,14 @@ public sealed class FetchEngine
 
         if (enabledModules != null && enabledModules.Count > 0)
         {
-            query = query.Where(m => enabledModules.Contains(m.Metadata.Key, StringComparer.OrdinalIgnoreCase));
+            var orderList = enabledModules.ToList();
+            query = query
+                .Where(m => orderList.Contains(m.Metadata.Key, StringComparer.OrdinalIgnoreCase))
+                .OrderBy(m => orderList.FindIndex(k => k.Equals(m.Metadata.Key, StringComparison.OrdinalIgnoreCase)));
+        }
+        else
+        {
+            query = query.OrderBy(m => m.Metadata.DefaultOrder);
         }
 
         if (disabledModules != null && disabledModules.Count > 0)
@@ -55,7 +56,6 @@ public sealed class FetchEngine
         }
 
         return query
-            .OrderBy(m => m.Metadata.DefaultOrder)
             .SelectMany(m => m.Fetch())
             .ToList();
     }

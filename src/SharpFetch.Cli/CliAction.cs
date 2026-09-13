@@ -5,5 +5,6 @@ public enum CliAction
     RunFetch,
     ShowHelp,
     ShowVersion,
-    ListModules
+    ListModules,
+    ShowError
 }

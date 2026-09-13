@@ -3,6 +3,7 @@ namespace SharpFetch.Cli;
 public sealed class CliOptions
 {
     public CliAction Action { get; set; } = CliAction.RunFetch;
+    public string? ErrorMessage { get; set; }
 
     // 1. Boolean Flags
     public bool NoLogo { get; set; }

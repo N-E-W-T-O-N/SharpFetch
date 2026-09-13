@@ -12,8 +12,22 @@ public static class AsciiArt
     public static (string[] lines, string accentColor) GetLogo(OsFamily family, ReadOnlySpan<char> osName, string? customLogo = null, string? customAccentColor = null)
     {
         var (lines, defaultAccent) = ResolveLogo(family, osName, customLogo);
-        string finalAccent = !string.IsNullOrWhiteSpace(customAccentColor) ? customAccentColor : defaultAccent;
+        string finalAccent = ValidateColor(customAccentColor, defaultAccent);
         return (lines, finalAccent);
+    }
+
+    private static string ValidateColor(string? customColor, string defaultColor)
+    {
+        if (string.IsNullOrWhiteSpace(customColor)) return defaultColor;
+        try
+        {
+            _ = Spectre.Console.Style.Parse(customColor);
+            return customColor;
+        }
+        catch
+        {
+            return defaultColor;
+        }
     }
 
     private static (string[] lines, string accentColor) ResolveLogo(OsFamily family, ReadOnlySpan<char> osName, string? customLogo)
@@ -135,14 +149,14 @@ public static class AsciiArt
             "[red]   ,g$$$$$$$$$$$$$$$P.    [/]",
             "[red] ,g$$P\"\"       \"\"Y$$.\".   [/]",
             "[red],$$P'              `$$$.  [/]",
-            "[red']$$P       ,ggs.     `$$b: [/]",
-            "[red']d$$'     ,$P\"'   .    $$$ [/]",
-            "[red']d$$'   ,$P'     ,    $$P [/]",
-            "[red']d$$'  ,$P      ,     $$P [/]",
-            "[red']d$$'  d$'     ,      $$P [/]",
-            "[red']d$$'  $$.   -\"      $$P [/]",
-            "[red']d$$'  `Y$b._       ,d$P' [/]",
-            "[red']d$$'    `\"Y$$$$$$$$$P\"'  [/]"
+            "[red]$$P       ,ggs.     `$$b: [/]",
+            "[red]d$$'     ,$P\"'   .    $$$ [/]",
+            "[red]d$$'   ,$P'     ,    $$P [/]",
+            "[red]d$$'  ,$P      ,     $$P [/]",
+            "[red]d$$'  d$'     ,      $$P [/]",
+            "[red]d$$'  $$.   -\"      $$P [/]",
+            "[red]d$$'  `Y$b._       ,d$P' [/]",
+            "[red]d$$'    `\"Y$$$$$$$$$P\"'  [/]"
         ];
         return (lines, "red");
     }

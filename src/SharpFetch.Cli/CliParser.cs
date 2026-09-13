@@ -77,7 +77,11 @@ public static class CliParser
                     key.Equals("l", StringComparison.OrdinalIgnoreCase))
                 {
                     var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
-                    if (!val.IsEmpty) options.CustomLogo = val.ToString();
+                    if (val.IsEmpty)
+                    {
+                        return SetError(options, $"Option '{args[i]}' requires a value.");
+                    }
+                    options.CustomLogo = val.ToString();
                     continue;
                 }
 
@@ -85,7 +89,11 @@ public static class CliParser
                     key.Equals("accent", StringComparison.OrdinalIgnoreCase))
                 {
                     var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
-                    if (!val.IsEmpty) options.AccentColor = val.ToString();
+                    if (val.IsEmpty)
+                    {
+                        return SetError(options, $"Option '{args[i]}' requires a value.");
+                    }
+                    options.AccentColor = val.ToString();
                     continue;
                 }
 
@@ -93,7 +101,11 @@ public static class CliParser
                     key.Equals("c", StringComparison.OrdinalIgnoreCase))
                 {
                     var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
-                    if (!val.IsEmpty) options.ConfigPath = val.ToString();
+                    if (val.IsEmpty)
+                    {
+                        return SetError(options, $"Option '{args[i]}' requires a value.");
+                    }
+                    options.ConfigPath = val.ToString();
                     continue;
                 }
 
@@ -105,10 +117,11 @@ public static class CliParser
                     key.Equals("m", StringComparison.OrdinalIgnoreCase))
                 {
                     var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
-                    if (!val.IsEmpty)
+                    if (val.IsEmpty)
                     {
-                        ParseCommaSeparatedList(val, options.EnabledModules);
+                        return SetError(options, $"Option '{args[i]}' requires a value.");
                     }
+                    ParseCommaSeparatedList(val, options.EnabledModules);
                     continue;
                 }
 
@@ -116,15 +129,31 @@ public static class CliParser
                     key.Equals("hide", StringComparison.OrdinalIgnoreCase))
                 {
                     var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
-                    if (!val.IsEmpty)
+                    if (val.IsEmpty)
                     {
-                        ParseCommaSeparatedList(val, options.DisabledModules);
+                        return SetError(options, $"Option '{args[i]}' requires a value.");
                     }
+                    ParseCommaSeparatedList(val, options.DisabledModules);
                     continue;
                 }
+
+                // Unrecognized switch
+                return SetError(options, $"Unrecognized option '{args[i]}'. Run 'sharpfetch --help' for available options.");
+            }
+            else
+            {
+                // Unexpected positional argument
+                return SetError(options, $"Unexpected argument '{args[i]}'. Run 'sharpfetch --help' for available options.");
             }
         }
 
+        return options;
+    }
+
+    private static CliOptions SetError(CliOptions options, string message)
+    {
+        options.Action = CliAction.ShowError;
+        options.ErrorMessage = message;
         return options;
     }
 
@@ -153,7 +182,7 @@ public static class CliParser
     }
 
     /// <summary>
-    /// Splits comma-separated values (e.g., "os,cpu,gpu") with zero heap allocation per token before adding to list.
+    /// Splits comma-separated values (e.g. "os,cpu,gpu") using spans, allocating only the final string tokens added to the list.
     /// </summary>
     private static void ParseCommaSeparatedList(ReadOnlySpan<char> span, List<string> targetList)
     {

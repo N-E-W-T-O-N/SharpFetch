@@ -17,4 +17,5 @@
   <Project Path="src/SharpFetch.Cli/SharpFetch.Cli.csproj" />
   <Project Path="src/SharpFetch.Core/SharpFetch.Core.csproj" />
   <Project Path="src/SharpFetch.UI/SharpFetch.UI.csproj" />
+  <Project Path="tests/SharpFetch.Tests/SharpFetch.Tests.csproj" />
 </Solution>
