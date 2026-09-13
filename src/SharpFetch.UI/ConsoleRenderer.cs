@@ -55,7 +55,7 @@ public static class ConsoleRenderer
         // 3. Color Palette Blocks
         rightLines.Add("");
         rightLines.Add(
-            "[black]███[/][red]███[/][green]███[/][yellow]███[/][blue]███[/][magenta]███[/][cyan]███[/][white]███[/]"
+            "[black]███[/][red]███[/][green]███[/][yellow]███[/][blue]███[/][pink1]███[/][cyan]███[/][white]███[/]"
         );
         rightLines.Add(
             "[grey]███[/][red3]███[/][green3]███[/][yellow3]███[/][blue3]███[/][magenta3]███[/][cyan3]███[/][grey84]███[/]"
