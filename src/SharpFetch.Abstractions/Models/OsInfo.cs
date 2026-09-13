@@ -72,15 +72,6 @@ public sealed record OsInfo
                 return string.IsNullOrEmpty(details) ? Name : $"{Name} ({details})";
             }
 
-            else if(Family == OsFamily.Linux)
-            {
-          
-            }
-
-            else if(Family == OsFamily.MacOS)
-            {
-               
-            }
             if (!string.IsNullOrWhiteSpace(Codename))
             {
                 return $"{Name} {Version} ({Codename})";

@@ -9,20 +9,19 @@ public static class CliParser
 
         for (int i = 0; i < args.Length; i++)
         {
+            if (string.IsNullOrEmpty(args[i])) continue;
             ReadOnlySpan<char> arg = args[i].AsSpan();
 
-            if (arg.IsEmpty) continue;
-
-            // Check if argument is a switch/option (starts with '-' or '/')
-            if (arg[0] == '-' || arg[0] == '/')
+            // Options must start with '-' or '--'
+            if (arg[0] == '-')
             {
-                // Strip leading dashes ('--', '-', '/')
-                ReadOnlySpan<char> trimmed = arg.TrimStart("-/");
+                ReadOnlySpan<char> trimmed = arg.TrimStart('-');
 
                 // Check for '--key=value' format
                 int eqIndex = trimmed.IndexOf('=');
-                ReadOnlySpan<char> key = eqIndex >= 0 ? trimmed[..eqIndex] : trimmed;
-                ReadOnlySpan<char> inlineValue = eqIndex >= 0 ? trimmed[(eqIndex + 1)..] : ReadOnlySpan<char>.Empty;
+                bool hasInlineValue = eqIndex >= 0;
+                ReadOnlySpan<char> key = hasInlineValue ? trimmed[..eqIndex] : trimmed;
+                ReadOnlySpan<char> inlineValue = hasInlineValue ? trimmed[(eqIndex + 1)..] : ReadOnlySpan<char>.Empty;
 
                 // ====================================================
                 // 1. Actions (Early Exits)
@@ -77,7 +76,7 @@ public static class CliParser
                 if (key.Equals("logo", StringComparison.OrdinalIgnoreCase) ||
                     key.Equals("l", StringComparison.OrdinalIgnoreCase))
                 {
-                    var val = ExtractOptionValue(inlineValue, args, ref i);
+                    var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
                     if (!val.IsEmpty) options.CustomLogo = val.ToString();
                     continue;
                 }
@@ -85,7 +84,7 @@ public static class CliParser
                 if (key.Equals("color", StringComparison.OrdinalIgnoreCase) ||
                     key.Equals("accent", StringComparison.OrdinalIgnoreCase))
                 {
-                    var val = ExtractOptionValue(inlineValue, args, ref i);
+                    var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
                     if (!val.IsEmpty) options.AccentColor = val.ToString();
                     continue;
                 }
@@ -93,7 +92,7 @@ public static class CliParser
                 if (key.Equals("config", StringComparison.OrdinalIgnoreCase) ||
                     key.Equals("c", StringComparison.OrdinalIgnoreCase))
                 {
-                    var val = ExtractOptionValue(inlineValue, args, ref i);
+                    var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
                     if (!val.IsEmpty) options.ConfigPath = val.ToString();
                     continue;
                 }
@@ -105,7 +104,7 @@ public static class CliParser
                     key.Equals("module", StringComparison.OrdinalIgnoreCase) ||
                     key.Equals("m", StringComparison.OrdinalIgnoreCase))
                 {
-                    var val = ExtractOptionValue(inlineValue, args, ref i);
+                    var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
                     if (!val.IsEmpty)
                     {
                         ParseCommaSeparatedList(val, options.EnabledModules);
@@ -116,7 +115,7 @@ public static class CliParser
                 if (key.Equals("disable", StringComparison.OrdinalIgnoreCase) ||
                     key.Equals("hide", StringComparison.OrdinalIgnoreCase))
                 {
-                    var val = ExtractOptionValue(inlineValue, args, ref i);
+                    var val = ExtractOptionValue(hasInlineValue, inlineValue, args, ref i);
                     if (!val.IsEmpty)
                     {
                         ParseCommaSeparatedList(val, options.DisabledModules);
@@ -129,14 +128,22 @@ public static class CliParser
         return options;
     }
 
-    private static ReadOnlySpan<char> ExtractOptionValue(ReadOnlySpan<char> inlineValue, string[] args, ref int currentIndex)
+    private static ReadOnlySpan<char> ExtractOptionValue(
+        bool hasInlineValue,
+        ReadOnlySpan<char> inlineValue,
+        string[] args,
+        ref int currentIndex)
     {
-        if (!inlineValue.IsEmpty)
+        // If inline '=' was provided (e.g. --key=val or --key=), do not steal the next argument
+        if (hasInlineValue)
         {
             return inlineValue;
         }
 
-        if (currentIndex + 1 < args.Length && !args[currentIndex + 1].StartsWith('-') && !args[currentIndex + 1].StartsWith('/'))
+        // Lookahead: consume next argument if present and not a switch (switches start with '-')
+        if (currentIndex + 1 < args.Length &&
+            !string.IsNullOrEmpty(args[currentIndex + 1]) &&
+            !args[currentIndex + 1].StartsWith('-'))
         {
             currentIndex++;
             return args[currentIndex].AsSpan();

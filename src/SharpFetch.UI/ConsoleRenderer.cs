@@ -6,21 +6,14 @@ namespace SharpFetch.UI;
 
 public static class ConsoleRenderer
 {
-    public static void Render(OsInfo os, IReadOnlyList<ModuleResult> results)
+    public static void Render(OsInfo os, IReadOnlyList<ModuleResult> results, RenderOptions? options = null)
     {
-        var (logoLines, accentColor) = AsciiArt.GetLogo(os.Family, os.Name);
-
-        var table = new Table
+        if (options?.DisableColor == true)
         {
-            Border = TableBorder.None,
-            ShowHeaders = false
-        };
+            AnsiConsole.Profile.Capabilities.ColorSystem = ColorSystem.NoColors;
+        }
 
-        table.AddColumn(new TableColumn("Logo").PadRight(3));
-        table.AddColumn(new TableColumn("Info"));
-
-        // Build left column markup (ASCII Logo)
-        string logoText = string.Join(Environment.NewLine, logoLines);
+        var (logoLines, accentColor) = AsciiArt.GetLogo(os, options?.CustomLogo, options?.AccentColor);
 
         // Build right column lines
         var rightLines = new List<string>();
@@ -53,17 +46,37 @@ public static class ConsoleRenderer
         }
 
         // 3. Color Palette Blocks
-        rightLines.Add("");
-        rightLines.Add(
-            "[black]███[/][red]███[/][green]███[/][yellow]███[/][blue]███[/][pink1]███[/][cyan]███[/][white]███[/]"
-        );
-        rightLines.Add(
-            "[grey]███[/][red3]███[/][green3]███[/][yellow3]███[/][blue3]███[/][magenta3]███[/][cyan3]███[/][grey84]███[/]"
-        );
+        if (options?.ShowColorPalette != false)
+        {
+            rightLines.Add("");
+            rightLines.Add(
+                "[black]███[/][red]███[/][green]███[/][yellow]███[/][blue]███[/][magenta]███[/][cyan]███[/][white]███[/]"
+            );
+            rightLines.Add(
+                "[grey]███[/][red3]███[/][green3]███[/][yellow3]███[/][blue3]███[/][magenta3]███[/][cyan3]███[/][grey84]███[/]"
+            );
+        }
 
         string infoText = string.Join(Environment.NewLine, rightLines);
 
-        table.AddRow(new Markup(logoText), new Markup(infoText));
+        var table = new Table
+        {
+            Border = TableBorder.None,
+            ShowHeaders = false
+        };
+
+        if (options?.ShowLogo != false)
+        {
+            string logoText = string.Join(Environment.NewLine, logoLines);
+            table.AddColumn(new TableColumn("Logo").PadRight(3));
+            table.AddColumn(new TableColumn("Info"));
+            table.AddRow(new Markup(logoText), new Markup(infoText));
+        }
+        else
+        {
+            table.AddColumn(new TableColumn("Info"));
+            table.AddRow(new Markup(infoText));
+        }
 
         AnsiConsole.WriteLine();
         AnsiConsole.Write(table);
