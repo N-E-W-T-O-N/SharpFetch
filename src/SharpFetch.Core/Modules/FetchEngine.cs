@@ -1,3 +1,4 @@
+using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
 namespace SharpFetch.Core.Modules;
@@ -17,9 +18,12 @@ public sealed class FetchEngine
         engine.Register(new KernelModule(probe));
         engine.Register(new CpuModule());
         engine.Register(new GpuModule());
+        engine.Register(new DisplayModule());
         engine.Register(new MemoryModule());
         engine.Register(new SwapModule());
         engine.Register(new DiskModule());
+        engine.Register(new LocalIpModule());
+        engine.Register(new WifiModule());
         engine.Register(new UptimeModule(probe));
 
         return engine;
