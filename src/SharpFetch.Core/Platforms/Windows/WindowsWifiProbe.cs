@@ -77,12 +77,18 @@ public sealed partial class WindowsWifiProbe : IWifiProbe
     private static WifiConnectionInfo? QueryConnection(nint clientHandle, Guid interfaceGuid, string interfaceName)
     {
         const uint wlanIntfOpcodeCurrentConnection = 7;
+        // WLAN_CONNECTION_ATTRIBUTES: the last field this method reads is the
+        // security attributes' authAlgorithm at assocPtr+68+8, i.e. 520+68+8+4
+        // bytes into the structure - require at least that much before trusting
+        // any fixed offset into it, rather than assuming the driver always
+        // returns the full documented layout.
+        const uint minDataSize = 520 + 68 + 8 + 4;
         nint dataPtr = nint.Zero;
 
         try
         {
-            uint error = WlanQueryInterface(clientHandle, ref interfaceGuid, wlanIntfOpcodeCurrentConnection, nint.Zero, out _, out dataPtr, out _);
-            if (error != 0 || dataPtr == nint.Zero)
+            uint error = WlanQueryInterface(clientHandle, ref interfaceGuid, wlanIntfOpcodeCurrentConnection, nint.Zero, out uint dataSize, out dataPtr, out _);
+            if (error != 0 || dataPtr == nint.Zero || dataSize < minDataSize)
                 return null;
 
             // WLAN_CONNECTION_ATTRIBUTES structure layout

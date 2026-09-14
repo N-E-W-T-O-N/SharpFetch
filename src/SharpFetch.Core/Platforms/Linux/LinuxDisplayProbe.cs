@@ -15,9 +15,22 @@ public sealed class LinuxDisplayProbe : IDisplayProbe
         if (!Directory.Exists("/sys/class/drm"))
             return results;
 
+        string[] connectorDirs;
         try
         {
-            foreach (string connectorDir in Directory.GetDirectories("/sys/class/drm", "card*-*"))
+            connectorDirs = Directory.GetDirectories("/sys/class/drm", "card*-*");
+        }
+        catch
+        {
+            return results;
+        }
+
+        foreach (string connectorDir in connectorDirs)
+        {
+            // Each connector is read independently - a permission error or
+            // transient I/O failure on one sysfs entry must not abort the
+            // whole scan and drop every other already/still-readable display.
+            try
             {
                 string statusPath = Path.Combine(connectorDir, "status");
                 if (!File.Exists(statusPath) || File.ReadAllText(statusPath).Trim() != "connected")
@@ -76,10 +89,10 @@ public sealed class LinuxDisplayProbe : IDisplayProbe
                     IsPrimary = results.Count == 0
                 });
             }
-        }
-        catch
-        {
-            // Ignore
+            catch
+            {
+                // Skip this connector only; keep scanning the rest.
+            }
         }
 
         return results;
