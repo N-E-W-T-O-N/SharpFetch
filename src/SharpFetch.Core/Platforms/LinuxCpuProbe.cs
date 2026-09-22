@@ -24,10 +24,56 @@ public sealed class LinuxCpuProbe : ICpuProbe
         ["0x69"] = "Intel",
     };
 
+    // ARM Ltd (implementer 0x41) "CPU part" IDs from /proc/cpuinfo, mapped to
+    // marketing names - modern arm64 has no "model name"/"Model" field at all
+    // (unlike x86 or ARM SBCs with a devicetree), so cloud/server ARM64 hosts
+    // (Ampere Altra and similar Neoverse-based CI runners included) need this
+    // decode or they report nothing but a raw implementer/part hex pair. Table
+    // subset ported from fastfetch's cpu_arm.h armPartId2name, covering
+    // Cortex-A/X and Neoverse cores likely to appear on real or CI hardware.
+    private static readonly Dictionary<uint, string> ArmPartNames = new()
+    {
+        [0xd01] = "Cortex-A32",
+        [0xd02] = "Cortex-A34",
+        [0xd03] = "Cortex-A53",
+        [0xd04] = "Cortex-A35",
+        [0xd05] = "Cortex-A55",
+        [0xd06] = "Cortex-A65",
+        [0xd07] = "Cortex-A57",
+        [0xd08] = "Cortex-A72",
+        [0xd09] = "Cortex-A73",
+        [0xd0a] = "Cortex-A75",
+        [0xd0b] = "Cortex-A76",
+        [0xd0c] = "Neoverse-N1",
+        [0xd0d] = "Cortex-A77",
+        [0xd0e] = "Cortex-A76AE",
+        [0xd40] = "Neoverse-V1",
+        [0xd41] = "Cortex-A78",
+        [0xd42] = "Cortex-A78AE",
+        [0xd44] = "Cortex-X1",
+        [0xd47] = "Cortex-A710",
+        [0xd48] = "Cortex-X2",
+        [0xd49] = "Neoverse-N2",
+        [0xd4a] = "Neoverse-E1",
+        [0xd4b] = "Cortex-A78C",
+        [0xd4c] = "Cortex-X1C",
+        [0xd4d] = "Cortex-A715",
+        [0xd4e] = "Cortex-X3",
+        [0xd4f] = "Neoverse-V2",
+        [0xd81] = "Cortex-A720",
+        [0xd82] = "Cortex-X4",
+        [0xd84] = "Neoverse-V3",
+        [0xd85] = "Cortex-X925",
+        [0xd87] = "Cortex-A725",
+        [0xd8e] = "Neoverse-N3",
+    };
+
     public CpuInfo Detect()
     {
         string model = string.Empty;
         string vendor = string.Empty;
+        string rawImplementer = string.Empty;
+        uint? partId = null;
 
         try
         {
@@ -49,10 +95,19 @@ public sealed class LinuxCpuProbe : ICpuProbe
                 }
                 else if (isVendorKey && vendor.Length == 0)
                 {
+                    rawImplementer = value;
                     vendor = ArmImplementers.TryGetValue(value, out string? known) ? known : value;
                 }
+                else if (key == "CPU part" && partId is null)
+                {
+                    string hex = value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) ? value[2..] : value;
+                    if (uint.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint parsed))
+                    {
+                        partId = parsed;
+                    }
+                }
 
-                if (model.Length > 0 && vendor.Length > 0)
+                if (model.Length > 0 && vendor.Length > 0 && partId is not null)
                 {
                     break;
                 }
@@ -63,12 +118,28 @@ public sealed class LinuxCpuProbe : ICpuProbe
             // Ignore and fall back to the device-tree lookup / defaults below.
         }
 
+        if (model.Length == 0 && rawImplementer.Equals("0x41", StringComparison.OrdinalIgnoreCase) &&
+            partId is uint id && ArmPartNames.TryGetValue(id, out string? partName))
+        {
+            // arm64 has no "model name"/"Model" field at all (unlike x86 or
+            // ARM SBCs with a devicetree) - decode the raw implementer/part
+            // pair into a marketing name instead, matching fastfetch.
+            model = partName;
+        }
+
         if (model.Length == 0)
         {
             // /proc/cpuinfo on many ARM SBCs has no "model name" field at all;
             // the devicetree "model" node (e.g. "Raspberry Pi 4 Model B Rev 1.4")
             // is the standard fallback fastfetch and friends also use.
             model = ReadDeviceTreeModel();
+        }
+
+        if (model.Length == 0 && vendor.Length > 0 && partId is uint unmapped)
+        {
+            // Unknown part on a known implementer: still surface the raw
+            // vendor+part pair rather than an uninformative "Unknown CPU".
+            model = $"{vendor}-{unmapped:X}";
         }
 
         if (model.Length == 0)
