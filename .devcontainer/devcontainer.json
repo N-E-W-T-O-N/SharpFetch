@@ -5,6 +5,10 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/dotnet",
 	"features": {
+		// Keep this in sync with the SDK feature band pinned in global.json -
+		// the feature does not read global.json itself (an omitted "version"
+		// defaults to "latest", which could land on a newer feature band than
+		// global.json's rollForward: latestFeature will accept).
 		"ghcr.io/devcontainers/features/dotnet:2": {
 			"tabCompletions": true,
 			"version": "10.0"
@@ -32,7 +36,11 @@
 	// }
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y clang zlib1g-dev && dotnet restore SharpFetch.slnx"
+	// clang/zlib1g-dev: Native AOT toolchain for Linux, matching CI's aot-smoke
+	// job. android/wasm-tools workloads: matches CI's platform-targets job,
+	// which builds SharpFetch.Core against those TFMs (compile-verification
+	// only - no CLI entry point ships for them, see ci.yml).
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y clang zlib1g-dev && dotnet workload install android wasm-tools && dotnet restore SharpFetch.slnx"
 
 	// Configure tool-specific properties.
 	// "customizations": {},
