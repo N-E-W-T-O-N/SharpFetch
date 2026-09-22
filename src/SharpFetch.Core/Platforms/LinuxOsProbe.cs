@@ -4,7 +4,7 @@ using System.Runtime.Versioning;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.Linux;
+namespace SharpFetch.Core.Platforms;
 
 [SupportedOSPlatform("linux")]
 public sealed class LinuxOsProbe : IOsProbe

@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.Common;
+namespace SharpFetch.Core.Platforms;
 
 public sealed class FallbackOsProbe : IOsProbe
 {
@@ -19,7 +19,9 @@ public sealed class FallbackOsProbe : IOsProbe
         };
 
         OsFamily family = OsFamily.Unknown;
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) family = OsFamily.Windows;
+        // Android first - it also reports as Linux on some runtimes.
+        if (OperatingSystem.IsAndroid()) family = OsFamily.Android;
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) family = OsFamily.Windows;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) family = OsFamily.Linux;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) family = OsFamily.MacOS;
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD)) family = OsFamily.FreeBSD;

@@ -1,7 +1,4 @@
-using SharpFetch.Platforms.Common;
-using SharpFetch.Platforms.Linux;
-using SharpFetch.Platforms.MacOS;
-using SharpFetch.Platforms.Windows;
+using SharpFetch.Core.Platforms;
 
 namespace SharpFetch.Core.Probes;
 
@@ -14,6 +11,13 @@ public static class OsProbeFactory
             return new WindowsOsProbe();
         }
 
+        // Checked before Linux: Android is Linux-based, so a Linux-first
+        // order would shadow this branch entirely.
+        if (OperatingSystem.IsAndroid())
+        {
+            return new AndroidProbe();
+        }
+
         if (OperatingSystem.IsLinux())
         {
             return new LinuxOsProbe();
@@ -22,6 +26,11 @@ public static class OsProbeFactory
         if (OperatingSystem.IsMacOS())
         {
             return new MacOsProbe();
+        }
+
+        if (OperatingSystem.IsFreeBSD())
+        {
+            return new FreeBSDProbe();
         }
 
         return new FallbackOsProbe();

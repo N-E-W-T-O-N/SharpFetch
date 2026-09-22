@@ -16,16 +16,16 @@ public sealed class OsModule : IFetchModule
         Key: "OS",
         DisplayName: "OS",
         Description: "Prints operating system name, version, and architecture",
-        DefaultOrder: 3,
+        DefaultOrder: 2,
         Icon: ""
     );
 
     public bool IsSupported => true;
 
-    public ModuleResult Fetch()
+    public IReadOnlyList<ModuleResult> Fetch()
     {
         OsInfo os = _probe.Detect();
         string formatted = $"{os.PrettyName} [{os.Architecture}]";
-        return new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, os);
+        return [new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, os)];
     }
 }

@@ -16,15 +16,15 @@ public sealed class KernelModule : IFetchModule
         Key: "Kernel",
         DisplayName: "Kernel",
         Description: "Prints OS kernel version",
-        DefaultOrder: 4,
+        DefaultOrder: 3,
         Icon: ""
     );
 
     public bool IsSupported => true;
 
-    public ModuleResult Fetch()
+    public IReadOnlyList<ModuleResult> Fetch()
     {
         OsInfo os = _probe.Detect();
-        return new ModuleResult(Metadata.Key, Metadata.DisplayName, os.Kernel, os);
+        return [new ModuleResult(Metadata.Key, Metadata.DisplayName, os.Kernel, os)];
     }
 }

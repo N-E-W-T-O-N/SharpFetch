@@ -16,17 +16,17 @@ public sealed class UptimeModule : IFetchModule
         Key: "Uptime",
         DisplayName: "Uptime",
         Description: "Prints system uptime",
-        DefaultOrder: 5,
+        DefaultOrder: 9,
         Icon: ""
     );
 
     public bool IsSupported => true;
 
-    public ModuleResult Fetch()
+    public IReadOnlyList<ModuleResult> Fetch()
     {
         OsInfo os = _probe.Detect();
         string formatted = FormatUptime(os.Uptime);
-        return new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, os);
+        return [new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, os)];
     }
 
     private static string FormatUptime(TimeSpan uptime)

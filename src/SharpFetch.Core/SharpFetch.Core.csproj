@@ -1,10 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- See SharpFetch.Abstractions.csproj for what IncludePlatformTargets does. -->
+  <PropertyGroup Condition="'$(IncludePlatformTargets)' == 'true'">
+    <TargetFrameworks>$(TargetFrameworks);net10.0-android;net10.0-browser</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(IncludePlatformTargets)' == 'true' and $([MSBuild]::IsOSPlatform('OSX'))">
+    <TargetFrameworks>$(TargetFrameworks);net10.0-ios;net10.0-tvos;net10.0-maccatalyst;net10.0-macos</TargetFrameworks>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\SharpFetch.Abstractions\SharpFetch.Abstractions.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!--
+    D-Bus is a Linux desktop mechanism. Restricting it to platform-neutral TFMs
+    keeps the browser/WASM and Apple platform builds resolvable - those targets
+    have no D-Bus and the package publishes no assets for them.
+  -->
+  <ItemGroup Condition="'$(TargetPlatformIdentifier)' == ''">
     <PackageReference Include="Tmds.DBus.Protocol" />
   </ItemGroup>
 
