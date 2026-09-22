@@ -74,9 +74,11 @@ jobs:
         include:
           - arch: x64
             alpine-arch: x86_64
+            apk-tools-url: https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.10/x86_64/apk.static#!sha256!34bb1a96f0258982377a289392d4ea9f3f4b767a4bb5806b1b87179b79ad8a1c
             runs-on: ubuntu-22.04
           - arch: arm64
             alpine-arch: aarch64
+            apk-tools-url: https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.10/aarch64/apk.static#!sha256!e471d35aa221d031abe9b6288aede12a8e9f1a398954e5a2e1d1bce1727b4ef4
             runs-on: ubuntu-22.04-arm
     steps:
       - name: checkout repository
@@ -88,11 +90,13 @@ jobs:
           # dotnet10-sdk only exists on Alpine's edge branch - no stable
           # release (v3.21 included) packages it yet.
           branch: edge
-          # arch defaults to x86_64 regardless of host; on the native arm64
-          # runner that tries to run an x86_64 apk.static binary without QEMU
-          # set up for it. ubuntu-22.04-arm is genuinely aarch64 hardware, so
-          # tell the action the host's real architecture instead.
+          # arch (QEMU target) and apk-tools-url (bootstrap apk.static binary)
+          # both default to x86_64 independent of the actual host, so the
+          # native arm64 runner tried to execute an x86_64 binary without
+          # QEMU set up for it. ubuntu-22.04-arm is genuinely aarch64
+          # hardware - no emulation needed, point both at the real arch.
           arch: ${{ matrix.alpine-arch }}
+          apk-tools-url: ${{ matrix.apk-tools-url }}
           packages: dotnet10-sdk bash build-base clang lld zlib-dev icu-libs krb5-libs libgcc libintl libssl3 libstdc++
 
       - name: publish Native AOT (musl)
