@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # Devops is included so CI can be validated on this branch before it's
+    # merged to main - remove once Devops merges in.
+    branches: [main, Devops]
   pull_request:
     branches: [main]
   workflow_dispatch:
