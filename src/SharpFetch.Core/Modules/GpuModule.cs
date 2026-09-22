@@ -25,10 +25,10 @@ public sealed class GpuModule : IFetchModule
     public IReadOnlyList<ModuleResult> Fetch()
     {
         IReadOnlyList<GpuAdapterInfo> adapters = _probe!.Detect();
+        if (adapters.Count == 0)
+            return [];
 
-        string formatted = adapters.Count == 0
-            ? "None detected"
-            : string.Join(", ", adapters.Select(FormatAdapter));
+        string formatted = string.Join(", ", adapters.Select(FormatAdapter));
 
         return [new ModuleResult(Metadata.Key, Metadata.DisplayName, formatted, adapters)];
     }
