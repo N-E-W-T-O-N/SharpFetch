@@ -113,7 +113,9 @@ jobs:
       - name: setup Alpine
         uses: jirutka/setup-alpine@6c81335ebff01869c49c73f03d8753d6b61c5a12 # v1.4.1
         with:
-          branch: v3.21
+          # dotnet10-sdk only exists on Alpine's edge branch - no stable
+          # release (v3.21 included) packages it yet.
+          branch: edge
           packages: dotnet10-sdk bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib
 
       - name: build (musl)
@@ -188,7 +190,11 @@ jobs:
             workloads: android wasm-tools
           - name: apple-mobile
             runs-on: macos-latest
-            workloads: ios tvos maccatalyst macos
+            # SharpFetch.Abstractions/Core add net10.0-android and
+            # net10.0-browser unconditionally under IncludePlatformTargets,
+            # plus the Apple TFMs on macOS hosts specifically - so a macOS
+            # build needs all of these workloads, not just the Apple ones.
+            workloads: android wasm-tools ios tvos maccatalyst macos
     steps:
       - name: checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

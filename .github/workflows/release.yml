@@ -83,7 +83,9 @@ jobs:
       - name: setup Alpine
         uses: jirutka/setup-alpine@6c81335ebff01869c49c73f03d8753d6b61c5a12 # v1.4.1
         with:
-          branch: v3.21
+          # dotnet10-sdk only exists on Alpine's edge branch - no stable
+          # release (v3.21 included) packages it yet.
+          branch: edge
           packages: dotnet10-sdk bash build-base clang lld zlib-dev icu-libs krb5-libs libgcc libintl libssl3 libstdc++
 
       - name: publish Native AOT (musl)
