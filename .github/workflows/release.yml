@@ -73,8 +73,10 @@ jobs:
       matrix:
         include:
           - arch: x64
+            alpine-arch: x86_64
             runs-on: ubuntu-22.04
           - arch: arm64
+            alpine-arch: aarch64
             runs-on: ubuntu-22.04-arm
     steps:
       - name: checkout repository
@@ -86,6 +88,11 @@ jobs:
           # dotnet10-sdk only exists on Alpine's edge branch - no stable
           # release (v3.21 included) packages it yet.
           branch: edge
+          # arch defaults to x86_64 regardless of host; on the native arm64
+          # runner that tries to run an x86_64 apk.static binary without QEMU
+          # set up for it. ubuntu-22.04-arm is genuinely aarch64 hardware, so
+          # tell the action the host's real architecture instead.
+          arch: ${{ matrix.alpine-arch }}
           packages: dotnet10-sdk bash build-base clang lld zlib-dev icu-libs krb5-libs libgcc libintl libssl3 libstdc++
 
       - name: publish Native AOT (musl)
