@@ -101,17 +101,16 @@ internal class Program
 
     private static void PrintModuleList()
     {
-        Console.WriteLine("""
-        Available Modules:
-          - Title    : user@hostname title header
-          - OS       : Operating system name, version, and architecture
-          - Kernel   : OS kernel version
-          - Uptime   : System uptime
-          - CPU      : CPU model and specifications
-          - GPU      : GPU graphics adapters
-          - Memory   : Physical memory (RAM) usage
-          - Swap     : Swap space usage
-          - Disk     : Disk volume capacity and usage
-        """);
+        var modules = FetchEngine.CreateDefault().Modules
+            .OrderBy(m => m.Metadata.DefaultOrder)
+            .ToList();
+
+        int keyWidth = modules.Max(m => m.Metadata.Key.Length);
+
+        Console.WriteLine("Available Modules:");
+        foreach (var module in modules)
+        {
+            Console.WriteLine($"  - {module.Metadata.Key.PadRight(keyWidth)} : {module.Metadata.Description}");
+        }
     }
 }
