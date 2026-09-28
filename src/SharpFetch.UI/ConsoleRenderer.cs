@@ -34,13 +34,13 @@ public static class ConsoleRenderer
                 int atIndex = rawTitle.IndexOf('@');
                 if (atIndex > 0)
                 {
-                    string user = rawTitle[..atIndex];
-                    string host = rawTitle[(atIndex + 1)..];
+                    string user = Markup.Escape(rawTitle[..atIndex]);
+                    string host = Markup.Escape(rawTitle[(atIndex + 1)..]);
                     rightLines.Add($"[bold {accentColor}]{user}[/][bold white]@[/][bold {accentColor}]{host}[/]");
                 }
                 else
                 {
-                    rightLines.Add($"[bold {accentColor}]{rawTitle}[/]");
+                    rightLines.Add($"[bold {accentColor}]{Markup.Escape(rawTitle)}[/]");
                 }
 
                 int titleLength = rawTitle.Length;
