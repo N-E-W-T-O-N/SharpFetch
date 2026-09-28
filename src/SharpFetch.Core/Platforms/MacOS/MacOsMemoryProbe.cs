@@ -79,14 +79,21 @@ public sealed partial class MacOsMemoryProbe : IMemoryProbe
 
         if (host_statistics64(host, HostVmInfo64, vmStat, ref count) == 0)
         {
-            // In vm_statistics64:
-            // active_count: uint32 at word offset 1
-            // inactive_count: uint32 at word offset 2
-            // wire_count: uint32 at word offset 3
-            // compressor_page_count: uint64 at word offset 18
+            // Word offsets into vm_statistics64, verified against Apple's real
+            // struct layout (apple-oss-distributions/xnu, osfmk/mach/vm_statistics.h):
+            // free_count(0), active_count(1), inactive_count(2), wire_count(3) are
+            // natural_t (1 word each); the run of uint64 fields between wire_count
+            // and purgeable_count/speculative_count (zero_fill_count, reactivations,
+            // pageins, pageouts, faults, cow_faults, lookups, hits, purges - 9
+            // uint64 fields = 18 words) pushes compressor_page_count to word 32,
+            // not 18 - word 18 is actually the low 32 bits of "hits" (a lifetime
+            // VM-lookup counter, unrelated to memory usage).
+            // active_count: natural_t at word offset 1
+            // wire_count: natural_t at word offset 3
+            // compressor_page_count: natural_t at word offset 32
             ulong activePages = (ulong)(uint)vmStat[1];
             ulong wiredPages = (ulong)(uint)vmStat[3];
-            ulong compressedPages = (ulong)(uint)vmStat[18];
+            ulong compressedPages = (ulong)(uint)vmStat[32];
 
             return (activePages + wiredPages + compressedPages) * pageSize;
         }
