@@ -17,7 +17,7 @@ public sealed class LocalIpModule : IFetchModule
     public ModuleMetadata Metadata => new(
         Key: "LocalIp",
         DisplayName: "Local IP",
-        Description: "List local IP addresses (v4 or v6), MAC addresses, link speeds, etc.",
+        Description: "Shows active Ethernet, Wi-Fi, cellular, and dial-up connections; use --details for full adapter information.",
         DefaultOrder: 37,
         Icon: "󰩟"
     );
@@ -26,7 +26,9 @@ public sealed class LocalIpModule : IFetchModule
 
     public IReadOnlyList<ModuleResult> Fetch()
     {
-        var interfaces = _probe.DetectInterfaces();
+        var interfaces = _probe.DetectInterfaces()
+            .Where(iface => iface.IsUp && iface.Type is NetworkType.Ethernet or NetworkType.Wifi or NetworkType.Cellular or NetworkType.Modem or NetworkType.Ppp)
+            .ToList();
         if (interfaces.Count == 0)
             return Array.Empty<ModuleResult>();
 
@@ -37,35 +39,23 @@ public sealed class LocalIpModule : IFetchModule
             var iface = interfaces[i];
             var sb = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(iface.Ipv4))
-            {
-                sb.Append(iface.Ipv4);
-            }
+            sb.Append(iface.Ipv4Cidr ?? iface.Ipv4 ?? "IPv6 only (use --details)");
 
-            if (!string.IsNullOrEmpty(iface.Ipv6))
-            {
-                if (sb.Length > 0) sb.Append(", ");
-                sb.Append(iface.Ipv6);
-            }
 
-            if (!string.IsNullOrEmpty(iface.MacAddress))
-            {
-                sb.Append($" ({iface.MacAddress})");
-            }
 
-            if (iface.SpeedBitsPerSecond > 0)
-            {
-                sb.Append($" [{iface.FormattedSpeed}]");
-            }
 
-            if (iface.IsDefaultGateway)
-            {
-                sb.Append(" *");
-            }
 
-            string displayName = interfaces.Count == 1
-                ? "Local IP"
-                : $"Local IP ({iface.Name})";
+
+            string displayName = iface.IsVirtual
+                ? "Network (vEthernet)"
+                : iface.Type switch
+                {
+                    NetworkType.Ethernet => "Network (Ethernet)",
+                    NetworkType.Wifi => "Network (Wi-Fi)",
+                    NetworkType.Cellular => "Network (Phone: cellular)",
+                    NetworkType.Modem or NetworkType.Ppp => "Network (Phone: dial-up)",
+                    _ => "Network"
+                };
 
             results.Add(new ModuleResult(
                 Key: $"LocalIp_{i}",

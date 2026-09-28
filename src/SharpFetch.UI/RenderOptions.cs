@@ -5,5 +5,6 @@ public sealed record RenderOptions(
     bool ShowColorPalette = true,
     bool DisableColor = false,
     string? CustomLogo = null,
-    string? AccentColor = null
+    string? AccentColor = null,
+    bool ShowDetails = false
 );

@@ -18,11 +18,17 @@ public sealed record NetworkInterfaceInfo
     public required string Description { get; init; }
     public required NetworkType Type { get; init; }
     public string? Ipv4 { get; init; }
+    public int? Ipv4PrefixLength { get; init; }
     public string? Ipv6 { get; init; }
+    public int? Ipv6PrefixLength { get; init; }
     public string? MacAddress { get; init; }
     public long SpeedBitsPerSecond { get; init; }
     public bool IsUp { get; init; }
     public bool IsDefaultGateway { get; init; }
+    public bool IsVirtual { get; init; }
+
+    public string? Ipv4Cidr => Ipv4 != null && Ipv4PrefixLength.HasValue ? $"{Ipv4}/{Ipv4PrefixLength.Value}" : Ipv4;
+    public string? Ipv6Cidr => Ipv6 != null && Ipv6PrefixLength.HasValue ? $"{Ipv6}/{Ipv6PrefixLength.Value}" : Ipv6;
 
     public string FormattedSpeed => SpeedBitsPerSecond switch
     {

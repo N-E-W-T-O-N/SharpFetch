@@ -9,6 +9,7 @@ public sealed class CliOptions
     public bool NoLogo { get; set; }
     public bool ShowColorPalette { get; set; } = true;
     public bool DisableColor { get; set; }
+    public bool ShowDetails { get; set; }
 
     // 2. String Options
     public string? CustomLogo { get; set; }

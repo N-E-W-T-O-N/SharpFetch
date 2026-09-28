@@ -1,11 +1,14 @@
+using System.Buffers.Binary;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Numerics;
+using System.Text.RegularExpressions;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
 namespace SharpFetch.Platforms.Common;
 
-public sealed class NetworkProbe : INetworkProbe
+public sealed partial class NetworkProbe : INetworkProbe
 {
     public IReadOnlyList<NetworkInterfaceInfo> DetectInterfaces()
     {
@@ -32,7 +35,9 @@ public sealed class NetworkProbe : INetworkProbe
 
             var ipProps = ni.GetIPProperties();
             string? ipv4 = null;
+            int? ipv4Prefix = null;
             string? ipv6 = null;
+            int? ipv6Prefix = null;
 
             foreach (var addr in ipProps.UnicastAddresses)
             {
@@ -43,6 +48,7 @@ public sealed class NetworkProbe : INetworkProbe
                     if (ipv4 == null || !ipStr.StartsWith("169.254."))
                     {
                         ipv4 = ipStr;
+                        ipv4Prefix = GetPrefixLength(addr);
                     }
                 }
                 else if (addr.Address.AddressFamily == AddressFamily.InterNetworkV6)
@@ -52,6 +58,7 @@ public sealed class NetworkProbe : INetworkProbe
                     if (ipv6 == null || !addr.Address.IsIPv6LinkLocal)
                     {
                         ipv6 = ipStr;
+                        ipv6Prefix = addr.PrefixLength > 0 && addr.PrefixLength <= 128 ? addr.PrefixLength : null;
                     }
                 }
             }
@@ -72,6 +79,7 @@ public sealed class NetworkProbe : INetworkProbe
             }
 
             var type = MapInterfaceType(ni.NetworkInterfaceType, ni.Description);
+            bool isVirtual = IsVirtualInterface(ni.Name, ni.Description, type);
 
             results.Add(new NetworkInterfaceInfo
             {
@@ -79,11 +87,14 @@ public sealed class NetworkProbe : INetworkProbe
                 Description = ni.Description,
                 Type = type,
                 Ipv4 = ipv4,
+                Ipv4PrefixLength = ipv4Prefix,
                 Ipv6 = ipv6,
+                Ipv6PrefixLength = ipv6Prefix,
                 MacAddress = mac,
                 SpeedBitsPerSecond = ni.Speed > 0 ? ni.Speed : 0,
                 IsUp = true,
-                IsDefaultGateway = hasGateway
+                IsDefaultGateway = hasGateway,
+                IsVirtual = isVirtual
             });
         }
 
@@ -104,31 +115,120 @@ public sealed class NetworkProbe : INetworkProbe
             .ToList();
     }
 
-    private static NetworkType MapInterfaceType(NetworkInterfaceType type, string description)
+    [GeneratedRegex(@"\b(cellular|lte|4g|5g|wwan)\b|mobile\s*broadband", RegexOptions.IgnoreCase)]
+    private static partial Regex CellularRegex();
+
+    [GeneratedRegex(@"\b(modem|dial-?up)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex ModemRegex();
+
+    internal static NetworkType MapInterfaceType(NetworkInterfaceType type, string description)
     {
         string descLower = description.ToLowerInvariant();
 
-        if (descLower.Contains("wi-fi") || descLower.Contains("wireless") || descLower.Contains("802.11") || descLower.Contains("wlan"))
-            return NetworkType.Wifi;
-
-        if (descLower.Contains("cellular") || descLower.Contains("mobile") || descLower.Contains("lte") || descLower.Contains("5g") || descLower.Contains("wwan"))
-            return NetworkType.Cellular;
-
-        if (descLower.Contains("modem") || descLower.Contains("dial"))
-            return NetworkType.Modem;
-
-        if (descLower.Contains("wireguard") || descLower.Contains("openvpn") || descLower.Contains("tailscale") || descLower.Contains("tap-") || descLower.Contains("tun-"))
-            return NetworkType.Tunnel;
-
-        return type switch
+        // 1. Explicit Tunnel / VPN adapters
+        if (descLower.Contains("wireguard") || descLower.Contains("openvpn") || descLower.Contains("tailscale") ||
+            descLower.Contains("tap-") || descLower.Contains("tun-") || type == NetworkInterfaceType.Tunnel)
         {
-            NetworkInterfaceType.Ethernet or NetworkInterfaceType.GigabitEthernet or NetworkInterfaceType.FastEthernetFx or NetworkInterfaceType.FastEthernetT => NetworkType.Ethernet,
-            NetworkInterfaceType.Wireless80211 => NetworkType.Wifi,
-            NetworkInterfaceType.Wwanpp or NetworkInterfaceType.Wwanpp2 => NetworkType.Cellular,
-            NetworkInterfaceType.Ppp or NetworkInterfaceType.Slip or NetworkInterfaceType.Isdn => NetworkType.Modem,
-            NetworkInterfaceType.Tunnel => NetworkType.Tunnel,
-            NetworkInterfaceType.Loopback => NetworkType.Loopback,
-            _ => NetworkType.Other
-        };
+            return NetworkType.Tunnel;
+        }
+
+        // 2. Cellular / Mobile Broadband (e.g. Sierra Wireless LTE, Qualcomm Snapdragon 5G, Fibocom WWAN)
+        // Checked before generic "wireless" because many cellular modems have "Sierra Wireless" or "Wireless WAN" in their name.
+        if (type is NetworkInterfaceType.Wwanpp or NetworkInterfaceType.Wwanpp2 ||
+            CellularRegex().IsMatch(description))
+        {
+            return NetworkType.Cellular;
+        }
+
+        // 3. Dial-up / Modem
+        if (type is NetworkInterfaceType.Ppp or NetworkInterfaceType.Slip or NetworkInterfaceType.Isdn ||
+            ModemRegex().IsMatch(description))
+        {
+            return NetworkType.Modem;
+        }
+
+        // 4. Wi-Fi
+        if (type == NetworkInterfaceType.Wireless80211 ||
+            descLower.Contains("wi-fi") || descLower.Contains("wireless") || descLower.Contains("802.11") || descLower.Contains("wlan"))
+        {
+            return NetworkType.Wifi;
+        }
+
+        // 5. Ethernet
+        if (type is NetworkInterfaceType.Ethernet or NetworkInterfaceType.GigabitEthernet or
+                    NetworkInterfaceType.FastEthernetFx or NetworkInterfaceType.FastEthernetT ||
+            descLower.Contains("ethernet") || descLower.Contains("gbe") || descLower.Contains("lan"))
+        {
+            return NetworkType.Ethernet;
+        }
+
+        return NetworkType.Other;
+    }
+
+    internal static bool IsVirtualInterface(string name, string description, NetworkType type)
+    {
+        if (type == NetworkType.Tunnel)
+            return true;
+
+        string nameLower = name.ToLowerInvariant();
+        string descLower = description.ToLowerInvariant();
+
+        if (nameLower.StartsWith("vethernet") ||
+            nameLower.StartsWith("veth") ||
+            nameLower.StartsWith("docker") ||
+            nameLower.StartsWith("virbr") ||
+            nameLower.StartsWith("lxcbr") ||
+            nameLower.StartsWith("br-") ||
+            nameLower.Contains("vmnet") ||
+            nameLower.Contains("virtualbox") ||
+            nameLower.Contains("tailscale") ||
+            nameLower.Contains("wireguard") ||
+            nameLower.Contains("wintun") ||
+            nameLower.Contains("wg") ||
+            nameLower.Contains("zt"))
+        {
+            return true;
+        }
+
+        if (descLower.Contains("virtual ethernet adapter") ||
+            descLower.Contains("hyper-v") ||
+            descLower.Contains("vmware") ||
+            descLower.Contains("virtualbox") ||
+            descLower.Contains("host-only") ||
+            descLower.Contains("tap-") ||
+            descLower.Contains("tun-") ||
+            descLower.Contains("wintun") ||
+            descLower.Contains("tailscale") ||
+            descLower.Contains("wireguard") ||
+            descLower.Contains("openvpn"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static int? GetPrefixLength(UnicastIPAddressInformation addr)
+    {
+        if (addr.PrefixLength is > 0 and <= 32)
+        {
+            return addr.PrefixLength;
+        }
+
+        if (addr.IPv4Mask != null)
+        {
+            byte[] maskBytes = addr.IPv4Mask.GetAddressBytes();
+            if (maskBytes.Length == 4)
+            {
+                uint maskInt = BinaryPrimitives.ReadUInt32BigEndian(maskBytes);
+                int count = BitOperations.PopCount(maskInt);
+                if (count > 0)
+                {
+                    return count;
+                }
+            }
+        }
+
+        return null;
     }
 }

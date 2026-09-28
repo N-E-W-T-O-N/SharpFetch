@@ -70,6 +70,12 @@ public static class CliParser
                     continue;
                 }
 
+                if (key.Equals("details", StringComparison.OrdinalIgnoreCase))
+                {
+                    options.ShowDetails = true;
+                    continue;
+                }
+
                 // ====================================================
                 // 3. String Options
                 // ====================================================

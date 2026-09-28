@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SharpFetch.Abstractions\SharpFetch.Abstractions.csproj" />
+    <InternalsVisibleTo Include="SharpFetch.Tests" />
   </ItemGroup>
 
   <!--

@@ -65,10 +65,15 @@ internal class Program
             ShowColorPalette: options.ShowColorPalette,
             DisableColor: options.DisableColor,
             CustomLogo: options.CustomLogo,
-            AccentColor: options.AccentColor
+            AccentColor: options.AccentColor,
+            ShowDetails: options.ShowDetails
         );
 
-        ConsoleRenderer.Render(osInfo, results, renderOptions);
+        var descriptions = engine.Modules.ToDictionary(
+            module => module.Metadata.Key,
+            module => module.Metadata.Description,
+            StringComparer.OrdinalIgnoreCase);
+        ConsoleRenderer.Render(osInfo, results, renderOptions, descriptions);
     }
 
     private static void PrintHelp()
@@ -88,6 +93,7 @@ internal class Program
             -n, --no-logo            Hide OS ASCII logo
             --no-color               Disable all ANSI colors
             --no-palette             Hide ANSI color palette blocks
+            --details                Show network addresses and adapter details, with module explanations
             -l, --logo <name>        Specify custom ASCII logo (e.g. arch, ubuntu, windows, macos, tux, debian)
             --color <name>           Override accent color
         """);
