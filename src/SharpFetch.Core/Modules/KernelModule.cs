@@ -16,7 +16,7 @@ public sealed class KernelModule : IFetchModule
         Key: "Kernel",
         DisplayName: "Kernel",
         Description: "Prints OS kernel version",
-        DefaultOrder: 3,
+        DefaultOrder: 4,
         Icon: ""
     );
 

@@ -16,7 +16,7 @@ public sealed class GpuModule : IFetchModule
         Key: "GPU",
         DisplayName: "GPU",
         Description: "Prints detected graphics adapters and dedicated VRAM",
-        DefaultOrder: 5,
+        DefaultOrder: 6,
         Icon: ""
     );
 

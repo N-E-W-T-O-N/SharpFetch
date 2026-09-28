@@ -16,7 +16,7 @@ public sealed class CpuModule : IFetchModule
         Key: "CPU",
         DisplayName: "CPU",
         Description: "Prints CPU model, physical/logical core counts, and clock speed",
-        DefaultOrder: 4,
+        DefaultOrder: 5,
         Icon: ""
     );
 

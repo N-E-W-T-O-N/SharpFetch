@@ -16,7 +16,7 @@ public sealed class OsModule : IFetchModule
         Key: "OS",
         DisplayName: "OS",
         Description: "Prints operating system name, version, and architecture",
-        DefaultOrder: 2,
+        DefaultOrder: 3,
         Icon: ""
     );
 

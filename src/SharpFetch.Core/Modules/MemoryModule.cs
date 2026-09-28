@@ -16,7 +16,7 @@ public sealed class MemoryModule : IFetchModule
         Key: "Memory",
         DisplayName: "Memory",
         Description: "Prints used/total physical RAM and usage percentage",
-        DefaultOrder: 6,
+        DefaultOrder: 7,
         Icon: ""
     );
 

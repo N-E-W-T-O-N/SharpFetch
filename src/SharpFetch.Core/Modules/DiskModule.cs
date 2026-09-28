@@ -21,7 +21,7 @@ public sealed class DiskModule : IFetchModule
         Key: "Disk",
         DisplayName: "Disk",
         Description: "Prints used/total space and filesystem for each fixed disk volume",
-        DefaultOrder: 8,
+        DefaultOrder: 9,
         Icon: ""
     );
 

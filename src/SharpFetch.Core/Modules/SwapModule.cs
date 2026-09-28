@@ -16,7 +16,7 @@ public sealed class SwapModule : IFetchModule
         Key: "Swap",
         DisplayName: "Swap",
         Description: "Prints used/total swap (pagefile) space and usage percentage",
-        DefaultOrder: 7,
+        DefaultOrder: 8,
         Icon: ""
     );
 
