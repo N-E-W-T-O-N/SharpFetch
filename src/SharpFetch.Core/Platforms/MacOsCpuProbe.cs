@@ -52,15 +52,10 @@ public sealed partial class MacOsCpuProbe : ICpuProbe
         string model = GetSysctlString("machdep.cpu.brand_string");
         if (model.Length == 0)
         {
-            // machdep.cpu.brand_string is an Intel-era sysctl; whether Apple
-            // Silicon populates it varies by macOS version. hw.model
-            // ("Mac14,3") is always present but is a machine identifier, not
-            // a chip name - better than nothing, worse than a real brand string.
-            model = GetSysctlString("hw.model");
-        }
-        if (model.Length == 0)
-        {
-            model = "Unknown CPU";
+            // machdep.cpu.brand_string is an Intel-era sysctl; on Apple Silicon,
+            // hw.model ("Mac14,3") is mapped to the friendly Apple M-series chip name.
+            string hwModel = GetSysctlString("hw.model");
+            model = ResolveAppleSiliconName(hwModel);
         }
 
         string vendor = GetSysctlString("machdep.cpu.vendor");
@@ -84,5 +79,30 @@ public sealed partial class MacOsCpuProbe : ICpuProbe
             // the same sentinel every other platform's probe uses.
             BaseClockMHz = baseHz > 0 ? (int)(baseHz / 1_000_000) : 0
         };
+    }
+
+    private static string ResolveAppleSiliconName(string hwModel)
+    {
+        if (string.IsNullOrEmpty(hwModel)) return "Apple Silicon";
+
+        // M1 family
+        if (hwModel is "MacBookAir10,1" or "MacBookPro17,1" or "Macmini9,1" or "iMac21,1" or "iMac21,2") return "Apple M1";
+        if (hwModel is "MacBookPro18,1" or "MacBookPro18,2" or "MacBookPro18,3" or "MacBookPro18,4") return "Apple M1 Pro / Max";
+        if (hwModel is "Mac13,1" or "Mac13,2") return "Apple M1 Ultra / Max";
+
+        // M2 family
+        if (hwModel is "Mac14,2" or "Mac14,7" or "Mac14,15") return "Apple M2";
+        if (hwModel is "Mac14,3" or "Mac14,12") return "Apple M2";
+        if (hwModel is "Mac14,5" or "Mac14,6" or "Mac14,9" or "Mac14,10") return "Apple M2 Pro / Max";
+        if (hwModel is "Mac14,13" or "Mac14,14") return "Apple M2 Ultra";
+
+        // M3 family
+        if (hwModel is "Mac15,3" or "Mac15,6" or "Mac15,12" or "Mac15,13") return "Apple M3";
+        if (hwModel is "Mac15,7" or "Mac15,8" or "Mac15,9" or "Mac15,10" or "Mac15,11") return "Apple M3 Pro / Max";
+
+        // M4 family
+        if (hwModel.StartsWith("Mac16,", StringComparison.OrdinalIgnoreCase)) return "Apple M4";
+
+        return $"Apple Silicon ({hwModel})";
     }
 }

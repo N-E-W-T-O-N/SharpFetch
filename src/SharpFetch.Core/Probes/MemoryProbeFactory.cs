@@ -23,6 +23,16 @@ public static class MemoryProbeFactory
             return new LinuxMemoryProbe();
         }
 
+        if (OperatingSystem.IsMacOS())
+        {
+            return new MacOsMemoryProbe();
+        }
+
+        if (OperatingSystem.IsFreeBSD())
+        {
+            return new FreeBSDMemoryProbe();
+        }
+
         return null;
     }
 }

@@ -20,6 +20,11 @@ public static class SwapProbeFactory
             return new LinuxSwapProbe();
         }
 
+        if (OperatingSystem.IsMacOS())
+        {
+            return new MacOsSwapProbe();
+        }
+
         return null;
     }
 }

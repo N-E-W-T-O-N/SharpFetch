@@ -44,6 +44,7 @@ public static class AsciiArt
                 "android" => GetAndroidLogo(),
                 "linux" or "tux" => GetTuxLogo(),
                 "macos" or "mac" or "apple" or "darwin" => GetMacLogo(),
+                "freebsd" or "bsd" => GetFreeBsdLogo(),
                 _ => GetGenericLogo()
             };
         }
@@ -54,7 +55,7 @@ public static class AsciiArt
             OsFamily.Windows => GetWindowsLogo(),
             OsFamily.Linux => GetLinuxLogo(name),
             OsFamily.MacOS => GetMacLogo(),
-            OsFamily.FreeBSD => GetLinuxLogo(name),
+            OsFamily.FreeBSD => GetFreeBsdLogo(),
             OsFamily.Android => GetAndroidLogo(),
             _ => GetGenericLogo()
         };
@@ -236,6 +237,29 @@ public static class AsciiArt
             "[cyan]    'okKNX0KWMMMMMNKXNWNXOd;.   [/]"
         ];
         return (lines, "green1");
+    }
+
+    private static (string[] lines, string accentColor) GetFreeBsdLogo()
+    {
+        string[] lines =
+        [
+            "[red]```                        ```[/]",
+            "[red]` `.....---...--.```   -/+o+.[/]",
+            "[red]`+o   .--`         /y:`+sm#hyo.[/]",
+            "[red]-hy`oe-    ...:::=o:.+yd#hyo:[/]",
+            "[red] `:y`   `.:++++++::y:/oh#hyo/`[/]",
+            "[red]  :N-   .:+++++-   -y-+d#hyo/`[/]",
+            "[red]  :N-   .:+++++-   -y-+d#hyo/`[/]",
+            "[red]  :N-   .:+++++-   -y-+d#hyo/`[/]",
+            "[red]  :N-   .:+++++-   -y-+d#hyo/`[/]",
+            "[red]  :N-   .:+++++-   -y-+d#hyo/`[/]",
+            "[red]  /y`   `.:++++++::y:/oh#hyo/`[/]",
+            "[red].+hy`oe-    ...:::=o:.+yd#hyo:[/]",
+            "[red]`+o   .--`         /y:`+sm#hyo.[/]",
+            "[red]` `.....---...--.```   -/+o+.[/]",
+            "[red]```                        ```[/]"
+        ];
+        return (lines, "red");
     }
 
     private static (string[] lines, string accentColor) GetGenericLogo()

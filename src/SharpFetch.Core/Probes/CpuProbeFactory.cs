@@ -27,6 +27,11 @@ public static class CpuProbeFactory
             return new MacOsCpuProbe();
         }
 
+        if (OperatingSystem.IsFreeBSD())
+        {
+            return new FreeBSDCpuProbe();
+        }
+
         return null;
     }
 }
