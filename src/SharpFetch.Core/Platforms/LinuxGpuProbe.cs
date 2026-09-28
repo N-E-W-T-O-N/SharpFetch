@@ -104,23 +104,38 @@ public sealed class LinuxGpuProbe : IGpuProbe
 
                 if (string.IsNullOrEmpty(driverName)) continue;
 
-                string gpuName = driverName switch
-                {
-                    "vc4" or "v3d" => "Broadcom VideoCore (Raspberry Pi)",
-                    "panfrost" or "mali" => "ARM Mali GPU",
-                    "lima" => "ARM Mali (Utgard)",
-                    "msm" or "kgsl-3d0" => "Qualcomm Adreno",
-                    "etnaviv" => "Vivante GPU",
-                    "tegra" or "tegra-drm" => "NVIDIA Tegra",
-                    "virtio-gpu" or "virtio_gpu" => "Red Hat VirtIO GPU",
-                    "bochs-drm" => "Bochs Display Adapter",
-                    "simple-framebuffer" or "simpledrm" => "Simple DRM / EFI Framebuffer",
-                    _ => $"{driverName} DRM"
-                };
+                string gpuName;
+                string vendor;
 
-                string vendor = driverName is "vc4" or "v3d" ? "Broadcom" :
-                                driverName is "panfrost" or "lima" or "mali" ? "ARM" :
-                                driverName is "msm" or "kgsl-3d0" ? "Qualcomm" : string.Empty;
+                // Devicetree "compatible" string (e.g. "qcom,adreno-630",
+                // "arm,mali-t860") gives a real chip model - matches
+                // fastfetch's approach (gpu_linux.c detectOf) instead of the
+                // generic family name the driver-name table below produces.
+                if (TryParseDeviceTreeGpu(cardDir, out string dtName, out string dtVendor))
+                {
+                    gpuName = dtName;
+                    vendor = dtVendor;
+                }
+                else
+                {
+                    gpuName = driverName switch
+                    {
+                        "vc4" or "v3d" => "Broadcom VideoCore (Raspberry Pi)",
+                        "panfrost" or "mali" => "ARM Mali GPU",
+                        "lima" => "ARM Mali (Utgard)",
+                        "msm" or "kgsl-3d0" => "Qualcomm Adreno",
+                        "etnaviv" => "Vivante GPU",
+                        "tegra" or "tegra-drm" => "NVIDIA Tegra",
+                        "virtio-gpu" or "virtio_gpu" => "Red Hat VirtIO GPU",
+                        "bochs-drm" => "Bochs Display Adapter",
+                        "simple-framebuffer" or "simpledrm" => "Simple DRM / EFI Framebuffer",
+                        _ => $"{driverName} DRM"
+                    };
+
+                    vendor = driverName is "vc4" or "v3d" ? "Broadcom" :
+                             driverName is "panfrost" or "lima" or "mali" ? "ARM" :
+                             driverName is "msm" or "kgsl-3d0" ? "Qualcomm" : string.Empty;
+                }
 
                 adapters.Add(new GpuAdapterInfo
                 {
@@ -136,6 +151,58 @@ public sealed class LinuxGpuProbe : IGpuProbe
         {
             // Ignore
         }
+    }
+
+    /// <summary>
+    /// Reads the DRM device's Open Firmware modalias
+    /// (/sys/class/drm/cardN/device/modalias, format
+    /// "of:N&lt;name&gt;T&lt;type&gt;C&lt;compatible&gt;[C&lt;compatible2&gt;...]")
+    /// and parses the first "vendor,model" compatible entry - the same field
+    /// fastfetch's detectOf() reads for a real chip name (e.g. "adreno-630")
+    /// instead of a generic family name.
+    /// </summary>
+    private static bool TryParseDeviceTreeGpu(string cardDir, out string name, out string vendor)
+    {
+        name = string.Empty;
+        vendor = string.Empty;
+
+        string modaliasPath = Path.Combine(cardDir, "device", "modalias");
+        if (!File.Exists(modaliasPath)) return false;
+
+        string modalias;
+        try
+        {
+            modalias = File.ReadAllText(modaliasPath).Trim();
+        }
+        catch
+        {
+            return false;
+        }
+
+        if (!modalias.StartsWith("of:", StringComparison.OrdinalIgnoreCase)) return false;
+
+        int cIndex = modalias.IndexOf('C');
+        if (cIndex < 0) return false;
+
+        string rest = modalias[(cIndex + 1)..];
+        int nextC = rest.IndexOf('C');
+        string compatible = (nextC >= 0 ? rest[..nextC] : rest).Trim();
+        if (compatible.Length == 0) return false;
+
+        int commaIndex = compatible.IndexOf(',');
+        string vendorPart = commaIndex > 0 ? compatible[..commaIndex] : string.Empty;
+        string modelPart = commaIndex > 0 ? compatible[(commaIndex + 1)..] : compatible;
+
+        if (modelPart.Length == 0) return false;
+
+        name = modelPart;
+        vendor = vendorPart.Equals("brcm", StringComparison.OrdinalIgnoreCase)
+            ? "Broadcom"
+            : vendorPart.Length > 0
+                ? char.ToUpperInvariant(vendorPart[0]) + vendorPart[1..]
+                : string.Empty;
+
+        return true;
     }
 
     /// <summary>
