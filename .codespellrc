@@ -1,0 +1,4 @@
+codespell]
+# Vendored reference implementations analysed in OBSERVATIONS.md - not our code.
+skip = ./.git,./bin,./obj,./publish,./dotnet,*.svg
+ignore-words-list = crate,ba,nd,te,fo,inout,mut,ser
