@@ -24,6 +24,7 @@ public sealed class FetchEngine
         engine.Register(new DiskModule());
         engine.Register(new LocalIpModule());
         engine.Register(new WifiModule());
+        engine.Register(new BatteryModule());
         engine.Register(new UptimeModule(probe));
 
         return engine;
