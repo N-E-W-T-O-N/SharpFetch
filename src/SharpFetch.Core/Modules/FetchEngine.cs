@@ -14,6 +14,7 @@ public sealed class FetchEngine
 
         // Register core baseline modules
         engine.Register(new TitleModule(probe));
+        engine.Register(new HostModule());
         engine.Register(new OsModule(probe));
         engine.Register(new KernelModule(probe));
         engine.Register(new CpuModule());
