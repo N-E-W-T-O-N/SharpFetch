@@ -1,6 +1,6 @@
 # SharpFetch Component & Device Support Checklist
 
-> **Current Implementation Status**: 🟢 **15% Implemented (Core OS, Architecture, Kernel & Uptime Active)**  
+> **Current Implementation Status**: 🟢 **24% Implemented (OS, Host, Kernel, CPU, GPU, Display, Memory, Swap, Disk, Local IP, Wi-Fi, Battery & Uptime Active)**  
 > This checklist tracks what hardware and system telemetry components `SharpFetch` can read and display.
 
 ### Status Legend
@@ -12,7 +12,7 @@
 
 ## Fastfetch 74-Module Feature Checklist
 
-- [ ] 01) Battery       : Print battery capacity, status, etc
+- [*] 01) Battery       : Print battery capacity, status, etc
 - [ ] 02) BIOS          : Print information of 1st-stage bootloader (name, version, release date, etc)
 - [ ] 03) Bluetooth     : List (connected) bluetooth devices
 - [ ] 04) BluetoothRadio: List bluetooth radios width supported version and vendor
@@ -40,7 +40,7 @@
 - [ ] 26) Font          : Print system font names
 - [ ] 27) Gamepad       : List (connected) gamepads
 - [*] 28) GPU           : Print GPU names, graphic memory size, type, etc
-- [.] 29) Host          : Print product name of your computer
+- [*] 29) Host          : Print product name of your computer
 - [ ] 30) Icons         : Print icon style name
 - [ ] 31) InitSystem    : Print init system (pid 1) name and version
 - [*] 32) Kernel        : Print system kernel version
