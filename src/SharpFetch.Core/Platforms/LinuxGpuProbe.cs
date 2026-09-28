@@ -66,10 +66,76 @@ public sealed class LinuxGpuProbe : IGpuProbe
         }
         catch
         {
-            // Ignore and return whatever was collected so far (possibly empty).
+            // Ignore /sys/bus/pci read errors (e.g. non-PCI platforms)
+        }
+
+        if (adapters.Count == 0)
+        {
+            DetectSocGpu(adapters);
         }
 
         return adapters;
+    }
+
+    private static void DetectSocGpu(List<GpuAdapterInfo> adapters)
+    {
+        if (!Directory.Exists("/sys/class/drm")) return;
+
+        try
+        {
+            foreach (string cardDir in Directory.EnumerateDirectories("/sys/class/drm", "card[0-9]*"))
+            {
+                if (Path.GetFileName(cardDir).Contains('-')) continue;
+
+                string driverLink = Path.Combine(cardDir, "device", "driver");
+                string driverName = string.Empty;
+                if (Directory.Exists(driverLink))
+                {
+                    try
+                    {
+                        var target = Directory.ResolveLinkTarget(driverLink, false);
+                        driverName = target != null ? Path.GetFileName(target.FullName) : string.Empty;
+                    }
+                    catch
+                    {
+                        // Ignore symlink resolution failures
+                    }
+                }
+
+                if (string.IsNullOrEmpty(driverName)) continue;
+
+                string gpuName = driverName switch
+                {
+                    "vc4" or "v3d" => "Broadcom VideoCore (Raspberry Pi)",
+                    "panfrost" or "mali" => "ARM Mali GPU",
+                    "lima" => "ARM Mali (Utgard)",
+                    "msm" or "kgsl-3d0" => "Qualcomm Adreno",
+                    "etnaviv" => "Vivante GPU",
+                    "tegra" or "tegra-drm" => "NVIDIA Tegra",
+                    "virtio-gpu" or "virtio_gpu" => "Red Hat VirtIO GPU",
+                    "bochs-drm" => "Bochs Display Adapter",
+                    "simple-framebuffer" or "simpledrm" => "Simple DRM / EFI Framebuffer",
+                    _ => $"{driverName} DRM"
+                };
+
+                string vendor = driverName is "vc4" or "v3d" ? "Broadcom" :
+                                driverName is "panfrost" or "lima" or "mali" ? "ARM" :
+                                driverName is "msm" or "kgsl-3d0" ? "Qualcomm" : string.Empty;
+
+                adapters.Add(new GpuAdapterInfo
+                {
+                    Index = adapters.Count,
+                    Name = gpuName,
+                    Vendor = vendor,
+                    IsIntegrated = true
+                });
+                break;
+            }
+        }
+        catch
+        {
+            // Ignore
+        }
     }
 
     /// <summary>
