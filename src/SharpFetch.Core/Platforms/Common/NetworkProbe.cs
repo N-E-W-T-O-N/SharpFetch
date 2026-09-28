@@ -184,8 +184,12 @@ public sealed partial class NetworkProbe : INetworkProbe
             nameLower.Contains("tailscale") ||
             nameLower.Contains("wireguard") ||
             nameLower.Contains("wintun") ||
-            nameLower.Contains("wg") ||
-            nameLower.Contains("zt"))
+            // WireGuard/ZeroTier interfaces are conventionally named as a
+            // "wg"/"zt" prefix followed by a digit or separator (wg0, zt-abc);
+            // a bare Contains would false-positive on any adapter name that
+            // happens to contain those two letters.
+            nameLower.StartsWith("wg") ||
+            nameLower.StartsWith("zt"))
         {
             return true;
         }
