@@ -3,6 +3,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
 
+    <AssemblyName>SharpFetch</AssemblyName>
+
     <!-- Global dotnet tool packaging -->
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>sharpfetch</ToolCommandName>

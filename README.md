@@ -21,9 +21,9 @@ The projects target .NET 8, 9, and 10. The repository pins the .NET 10 SDK for b
 
 ## Download
 
-Prebuilt binaries are published on the [GitHub Releases page](https://github.com/N-E-W-T-O-N/SharpFetch/releases). Choose the archive matching your operating system and processor architecture, then extract it and run `SharpFetch.Cli` (or `SharpFetch.Cli.exe` on Windows). Each archive includes this README and the Apache-2.0 license.
+Prebuilt binaries are published on the [GitHub Releases page](https://github.com/N-E-W-T-O-N/SharpFetch/releases). Choose the archive matching your operating system and processor architecture, then extract it and run `SharpFetch` (or `SharpFetch.exe` on Windows). Each archive includes this README and the Apache-2.0 license.
 
-Native AOT builds do not require the .NET runtime. The Linux ARM 32-bit build uses ReadyToRun and requires the .NET runtime. The portable archive is framework-dependent and requires .NET 10.0 or later. Linux builds target glibc unless the archive name contains `musl` (for Alpine Linux).
+Native AOT builds do not require the .NET runtime. The Linux ARM 32-bit build is a self-contained single-file ReadyToRun build (not AOT) and also needs no separate .NET install. The portable archive is framework-dependent and requires .NET 10.0 or later. Linux builds target glibc unless the archive name contains `musl` (for Alpine Linux).
 
 The Windows archive is a `.zip`; Linux and macOS archives are `.tar.gz` files. See the [support checklist](Support.md) for platform-specific details.
 

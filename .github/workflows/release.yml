@@ -61,8 +61,8 @@ jobs:
         with:
           name: sharpfetch-${{ matrix.rid }}
           path: |
-            publish/${{ matrix.rid }}/SharpFetch.Cli
-            publish/${{ matrix.rid }}/SharpFetch.Cli.exe
+            publish/${{ matrix.rid }}/SharpFetch
+            publish/${{ matrix.rid }}/SharpFetch.exe
 
   # Alpine/musl needs an Alpine host for its AOT toolchain.
   native-musl:
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sharpfetch-linux-musl-${{ matrix.arch }}
-          path: publish/linux-musl-${{ matrix.arch }}/SharpFetch.Cli
+          path: publish/linux-musl-${{ matrix.arch }}/SharpFetch
 
   # armv7 (32-bit ARM) has runtime packs but no Native AOT support, so it ships
   # as a self-contained ReadyToRun build instead.
@@ -128,18 +128,18 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: publish self-contained ReadyToRun
+      - name: publish single-file ReadyToRun
         run: >
           dotnet publish src/SharpFetch.Cli/SharpFetch.Cli.csproj
           -c Release -f net10.0 -r linux-arm
-          --self-contained -p:PublishReadyToRun=true -p:PackAsTool=false
+          --self-contained -p:PublishSingleFile=true -p:PublishReadyToRun=true -p:PackAsTool=false
           -o publish/linux-arm
 
       - name: upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sharpfetch-linux-arm
-          path: publish/linux-arm/SharpFetch.Cli
+          path: publish/linux-arm/SharpFetch
 
   # Portable framework-dependent build. This is the only route for platforms
   # with a valid RID but no Microsoft-published runtime pack (FreeBSD, riscv64,
@@ -198,6 +198,9 @@ jobs:
             if [[ "$name" == *-win-* ]]; then
               (cd "$dir" && zip -qr "../../dist/$name.zip" .)
             else
+              # upload/download-artifact drops POSIX permissions; restore the
+              # executable bit so users don't have to chmod after extracting.
+              find "$dir" -type f -name SharpFetch -exec chmod +x {} +
               tar -czf "dist/$name.tar.gz" -C "$dir" .
             fi
           done

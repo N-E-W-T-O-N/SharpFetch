@@ -181,7 +181,7 @@ jobs:
       - name: run the AOT binary
         shell: bash
         run: |
-          bin=publish/${{ matrix.rid }}/SharpFetch.Cli
+          bin=publish/${{ matrix.rid }}/SharpFetch
           [ "${{ runner.os }}" = "Windows" ] && bin="$bin.exe"
           ls -l publish/${{ matrix.rid }}
           "./$bin"
