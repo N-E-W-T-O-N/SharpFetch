@@ -16,12 +16,22 @@ public static class CpuProbeFactory
         {
             return new WindowsCpuProbe();
         }
-
+        if (OperatingSystem.IsAndroid())
+        {
+            return new AndroidCpuProbe();
+        })
         if (OperatingSystem.IsLinux())
         {
             return new LinuxCpuProbe();
         }
-
+        if(OperatingSystem.IsIOS())
+        {
+            return new IosCpuProbe();
+        }
+        if(OperatingSystem.IsTvOS())
+        {
+            return new TvOsCpuProbe();
+        })
         if (OperatingSystem.IsMacOS())
         {
             return new MacOsCpuProbe();
