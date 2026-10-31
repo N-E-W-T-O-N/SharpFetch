@@ -102,6 +102,11 @@ jobs:
       - name: publish Native AOT (musl)
         shell: alpine.sh {0}
         run: |
+          # The runner's XDG_RUNTIME_DIR (/run/user/<uid>) leaks into the
+          # Alpine chroot, where it doesn't exist; the edge SDK's named-mutex
+          # code then fails on first run ("NuGet-Migrations ... lstat
+          # /run/user/1001 ENOENT"). Unset, it falls back to /tmp.
+          unset XDG_RUNTIME_DIR
           dotnet publish src/SharpFetch.Cli/SharpFetch.Cli.csproj \
             -c Release -f net10.0 -r linux-musl-${{ matrix.arch }} \
             -p:PublishAot=true -p:PackAsTool=false \
