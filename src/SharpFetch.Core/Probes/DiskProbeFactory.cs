@@ -1,4 +1,4 @@
-using SharpFetch.Core.Platforms;
+using SharpFetch.Core.Platforms.Common;
 
 namespace SharpFetch.Core.Probes;
 

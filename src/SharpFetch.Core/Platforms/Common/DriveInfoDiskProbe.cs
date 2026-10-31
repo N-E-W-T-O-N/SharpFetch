@@ -1,7 +1,7 @@
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Common;
 
 /// <summary>
 /// System.IO.DriveInfo is genuinely cross-platform BCL - unlike CPU/GPU/OS

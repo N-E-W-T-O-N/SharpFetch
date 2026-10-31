@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Common;
 
 public sealed class FallbackOsProbe : IOsProbe
 {

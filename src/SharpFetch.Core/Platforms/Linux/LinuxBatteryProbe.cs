@@ -3,7 +3,7 @@ using System.Runtime.Versioning;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Linux;
 
 [SupportedOSPlatform("linux")]
 public sealed class LinuxBatteryProbe : IBatteryProbe

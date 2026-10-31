@@ -2,9 +2,10 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Win32;
 using SharpFetch.Core.Models;
+using SharpFetch.Core.Platforms.Common;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Windows;
 
 [SupportedOSPlatform("windows")]
 public sealed partial class WindowsCpuProbe : ICpuProbe

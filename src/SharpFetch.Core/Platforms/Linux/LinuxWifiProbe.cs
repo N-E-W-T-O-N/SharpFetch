@@ -4,7 +4,7 @@ using System.Text;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.Linux;
+namespace SharpFetch.Core.Platforms.Linux;
 
 /// <summary>
 /// Enumerates wireless interfaces and signal quality from /proc/net/wireless

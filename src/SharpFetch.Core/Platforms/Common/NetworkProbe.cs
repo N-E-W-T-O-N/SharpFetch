@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.Common;
+namespace SharpFetch.Core.Platforms.Common;
 
 public sealed partial class NetworkProbe : INetworkProbe
 {

@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Runtime.Versioning;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Linux;
 
 /// <summary>
 /// Parses /proc/meminfo once per call into a name -> value(KiB) map. Despite

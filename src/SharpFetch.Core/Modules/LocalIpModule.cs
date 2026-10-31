@@ -1,7 +1,7 @@
 using System.Text;
 using SharpFetch.Core.Models;
+using SharpFetch.Core.Platforms.Common;
 using SharpFetch.Core.Probes;
-using SharpFetch.Platforms.Common;
 
 namespace SharpFetch.Core.Modules;
 

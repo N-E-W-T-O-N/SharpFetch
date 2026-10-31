@@ -1,6 +1,6 @@
 using System.Net.NetworkInformation;
 using SharpFetch.Core.Models;
-using SharpFetch.Platforms.Common;
+using SharpFetch.Core.Platforms.Common;
 using Xunit;
 
 namespace SharpFetch.Tests;

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace SharpFetch.Platforms.Common;
+namespace SharpFetch.Core.Platforms.Common;
 
 public static class EdidParser
 {

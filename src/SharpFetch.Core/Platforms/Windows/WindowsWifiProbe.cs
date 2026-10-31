@@ -4,7 +4,7 @@ using System.Text;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.Windows;
+namespace SharpFetch.Core.Platforms.Windows;
 
 [SupportedOSPlatform("windows")]
 public sealed partial class WindowsWifiProbe : IWifiProbe

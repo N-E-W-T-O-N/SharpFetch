@@ -2,10 +2,10 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Microsoft.Win32;
 using SharpFetch.Core.Models;
+using SharpFetch.Core.Platforms.Common;
 using SharpFetch.Core.Probes;
-using SharpFetch.Platforms.Common;
 
-namespace SharpFetch.Platforms.Windows;
+namespace SharpFetch.Core.Platforms.Windows;
 
 [SupportedOSPlatform("windows")]
 public sealed class WindowsDisplayProbe : IDisplayProbe

@@ -1,4 +1,4 @@
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Common;
 
 /// <summary>
 /// Parses a raw SMBIOS structure table (the DMTF-specified binary format) to

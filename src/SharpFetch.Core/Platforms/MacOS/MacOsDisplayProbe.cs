@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.MacOS;
+namespace SharpFetch.Core.Platforms.MacOS;
 
 /// <summary>
 /// macOS has no sysctl or virtual-filesystem equivalent for display enumeration

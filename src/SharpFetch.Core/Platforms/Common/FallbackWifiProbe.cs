@@ -1,7 +1,7 @@
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Platforms.Common;
+namespace SharpFetch.Core.Platforms.Common;
 
 public sealed class FallbackWifiProbe : IWifiProbe
 {

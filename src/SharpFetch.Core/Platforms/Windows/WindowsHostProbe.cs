@@ -3,7 +3,7 @@ using Microsoft.Win32;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Windows;
 
 [SupportedOSPlatform("windows")]
 public sealed class WindowsHostProbe : IHostProbe

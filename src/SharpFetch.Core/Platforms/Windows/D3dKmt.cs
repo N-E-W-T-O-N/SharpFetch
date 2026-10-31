@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.Windows;
 
 /// <summary>
 /// Minimal P/Invoke surface over gdi32.dll's D3DKMT ("Direct3D Kernel Mode

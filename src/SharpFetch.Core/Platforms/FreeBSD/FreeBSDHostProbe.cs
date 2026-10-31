@@ -4,7 +4,7 @@ using System.Text;
 using SharpFetch.Core.Models;
 using SharpFetch.Core.Probes;
 
-namespace SharpFetch.Core.Platforms;
+namespace SharpFetch.Core.Platforms.FreeBSD;
 
 [SupportedOSPlatform("freebsd")]
 public sealed partial class FreeBSDHostProbe : IHostProbe
