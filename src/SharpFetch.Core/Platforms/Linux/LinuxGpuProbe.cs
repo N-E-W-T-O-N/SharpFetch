@@ -13,10 +13,9 @@ public sealed class LinuxGpuProbe : IGpuProbe
     private const string DisplayClassPrefix = "0x03";
 
     // A small, stable set of well-known PCI vendor IDs for a friendlier name.
-    // Full model-name resolution needs a pci.ids database (thousands of
-    // vendor:device entries, e.g. fastfetch's ENABLE_EMBEDDED_PCIIDS) which
-    // isn't bundled here - unrecognized vendors/devices report their raw PCI
-    // IDs rather than a guessed name.
+    // When the system pci.ids database (hwdata/pciutils) is installed, its
+    // vendor and model names replace these; without it, unrecognized
+    // vendors/devices report their raw PCI IDs rather than a guessed name.
     private static readonly Dictionary<string, string> KnownVendors = new(StringComparer.OrdinalIgnoreCase)
     {
         ["0x10de"] = "NVIDIA",
@@ -31,10 +30,10 @@ public sealed class LinuxGpuProbe : IGpuProbe
     public IReadOnlyList<GpuAdapterInfo> Detect()
     {
         var adapters = new List<GpuAdapterInfo>();
+        var devices = new List<(string ClassValue, string VendorId, string DeviceId, long? VramBytes)>();
 
         try
         {
-            int index = 0;
             foreach (string deviceDir in Directory.EnumerateDirectories("/sys/bus/pci/devices"))
             {
                 try
@@ -45,17 +44,10 @@ public sealed class LinuxGpuProbe : IGpuProbe
                         continue;
                     }
 
-                    string vendorId = ReadTrimmed(Path.Combine(deviceDir, "vendor"));
-                    string deviceId = ReadTrimmed(Path.Combine(deviceDir, "device"));
-                    string vendorName = KnownVendors.TryGetValue(vendorId, out string? known) ? known : vendorId;
-
-                    adapters.Add(new GpuAdapterInfo
-                    {
-                        Index = index++,
-                        Name = $"{vendorName} {deviceId}".Trim(),
-                        Vendor = vendorName,
-                        DedicatedVramBytes = ReadAmdgpuVram(deviceDir)
-                    });
+                    devices.Add((classValue,
+                        ReadTrimmed(Path.Combine(deviceDir, "vendor")),
+                        ReadTrimmed(Path.Combine(deviceDir, "device")),
+                        ReadAmdgpuVram(deviceDir)));
                 }
                 catch
                 {
@@ -69,6 +61,44 @@ public sealed class LinuxGpuProbe : IGpuProbe
             // Ignore /sys/bus/pci read errors (e.g. non-PCI platforms)
         }
 
+        // Resolve every adapter in one pass over pci.ids rather than one per GPU.
+        var lookupIds = new List<(string Vendor, string Device)>();
+        foreach (var device in devices)
+        {
+            if (PciIds.Normalize(device.VendorId) is string v && PciIds.Normalize(device.DeviceId) is string d)
+            {
+                lookupIds.Add((v, d));
+            }
+        }
+
+        var names = PciIds.Lookup(lookupIds);
+
+        foreach (var device in devices)
+        {
+            string vendorName = KnownVendors.TryGetValue(device.VendorId, out string? known) ? known : device.VendorId;
+            string name = $"{vendorName} {device.DeviceId}".Trim();
+
+            string? v = PciIds.Normalize(device.VendorId);
+            string? d = PciIds.Normalize(device.DeviceId);
+            if (v is not null && d is not null && names.TryGetValue((v, d), out var pci))
+            {
+                vendorName = pci.VendorName;
+                // Devices missing from pci.ids get "Device xxxx" plus the
+                // PCI class, like lspci/fastfetch.
+                name = pci.DeviceName is not null
+                    ? $"{vendorName} {pci.DeviceName}"
+                    : $"{vendorName} Device {d}{ClassSuffix(device.ClassValue)}";
+            }
+
+            adapters.Add(new GpuAdapterInfo
+            {
+                Index = adapters.Count,
+                Name = name,
+                Vendor = vendorName,
+                DedicatedVramBytes = device.VramBytes
+            });
+        }
+
         if (adapters.Count == 0)
         {
             DetectSocGpu(adapters);
@@ -76,6 +106,15 @@ public sealed class LinuxGpuProbe : IGpuProbe
 
         return adapters;
     }
+
+    private static string ClassSuffix(string classValue) => classValue.Length >= 6 ? classValue[..6].ToLowerInvariant() switch
+    {
+        "0x0300" => " (VGA compatible)",
+        "0x0301" => " (XGA compatible)",
+        "0x0302" => " (3D controller)",
+        "0x0380" => " (Display controller)",
+        _ => string.Empty
+    } : string.Empty;
 
     private static void DetectSocGpu(List<GpuAdapterInfo> adapters)
     {
