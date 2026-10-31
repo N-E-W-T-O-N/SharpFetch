@@ -1,8 +1,8 @@
-using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using SharpFetch.Core.Models;
+using SharpFetch.Core.Platforms.Common;
 using SharpFetch.Core.Probes;
 
 namespace SharpFetch.Core.Platforms.MacOS;
@@ -20,29 +20,20 @@ namespace SharpFetch.Core.Platforms.MacOS;
 [SupportedOSPlatform("macos")]
 public sealed partial class MacOsWifiProbe : IWifiProbe
 {
+    // SPAirPortDataType can trigger a Wi-Fi scan and take several seconds.
+    private const int WifiTimeoutMs = 15000;
+
     public IReadOnlyList<WifiConnectionInfo> DetectWifi()
     {
         var results = new List<WifiConnectionInfo>();
 
         try
         {
-            using var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "/usr/sbin/system_profiler",
-                Arguments = "SPAirPortDataType -json",
-                RedirectStandardOutput = true,
-                // Not redirecting stderr: see MacOsGpuProbe for why redirecting an
-                // unread stream risks a deadlock.
-                UseShellExecute = false
-            });
-
-            if (process is null)
+            string? json = ProcessRunner.TryRun("/usr/sbin/system_profiler", "SPAirPortDataType -json", WifiTimeoutMs);
+            if (json is null)
             {
                 return results;
             }
-
-            string json = process.StandardOutput.ReadToEnd();
-            process.WaitForExit(5000);
 
             using var document = JsonDocument.Parse(json);
             if (!document.RootElement.TryGetProperty("SPAirPortDataType", out JsonElement airportArray))

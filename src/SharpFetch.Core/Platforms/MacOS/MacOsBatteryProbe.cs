@@ -1,32 +1,23 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.Versioning;
 using SharpFetch.Core.Models;
+using SharpFetch.Core.Platforms.Common;
 using SharpFetch.Core.Probes;
 
 namespace SharpFetch.Core.Platforms.MacOS;
 
 public sealed class MacOsBatteryProbe : IBatteryProbe
 {
+    // pmset is normally ~20 ms, but can stall on a cold or busy machine.
+    private const int PmsetTimeoutMs = 3000;
+
     [SupportedOSPlatform("macos")]
     public IReadOnlyList<BatteryInfo> DetectBatteries()
     {
         try
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "/usr/bin/pmset",
-                Arguments = "-g batt",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(psi);
-            if (process == null) return [];
-
-            string output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit(500);
+            string? output = ProcessRunner.TryRun("/usr/bin/pmset", "-g batt", PmsetTimeoutMs);
+            if (output is null) return [];
 
             return ParsePmsetOutput(output);
         }

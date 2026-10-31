@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -35,23 +34,11 @@ public sealed partial class MacOsDisplayProbe : IDisplayProbe
 
         try
         {
-            using var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "/usr/sbin/system_profiler",
-                Arguments = "SPDisplaysDataType -json",
-                RedirectStandardOutput = true,
-                // Not redirecting stderr: see MacOsGpuProbe for why redirecting
-                // an unread stream risks a deadlock.
-                UseShellExecute = false
-            });
-
-            if (process is null)
+            string? json = SystemProfiler.DisplaysJson;
+            if (json is null)
             {
                 return results;
             }
-
-            string json = process.StandardOutput.ReadToEnd();
-            process.WaitForExit(5000);
 
             using var document = JsonDocument.Parse(json);
             if (!document.RootElement.TryGetProperty("SPDisplaysDataType", out JsonElement gpuArray))

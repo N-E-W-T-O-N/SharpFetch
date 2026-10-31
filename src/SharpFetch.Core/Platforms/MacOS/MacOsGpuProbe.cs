@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -29,24 +28,11 @@ public sealed partial class MacOsGpuProbe : IGpuProbe
 
         try
         {
-            using var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "/usr/sbin/system_profiler",
-                Arguments = "SPDisplaysDataType -json",
-                RedirectStandardOutput = true,
-                // Not redirecting stderr: it's unread here, and redirecting a
-                // stream nobody drains risks a deadlock if the child fills that
-                // pipe's OS buffer while this process is blocked reading stdout.
-                UseShellExecute = false
-            });
-
-            if (process is null)
+            string? json = SystemProfiler.DisplaysJson;
+            if (json is null)
             {
                 return adapters;
             }
-
-            string json = process.StandardOutput.ReadToEnd();
-            process.WaitForExit(5000);
 
             using var document = JsonDocument.Parse(json);
             if (!document.RootElement.TryGetProperty("SPDisplaysDataType", out JsonElement gpuArray))
