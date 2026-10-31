@@ -57,7 +57,7 @@ public sealed partial class MacOsDisplayProbe : IDisplayProbe
 
                     foreach (JsonElement display in prop.Value.EnumerateArray())
                     {
-                        DisplayInfo? info = ParseDisplay(display, results.Count == 0);
+                        DisplayInfo? info = ParseDisplay(display);
                         if (info is not null)
                         {
                             results.Add(info);
@@ -72,10 +72,14 @@ public sealed partial class MacOsDisplayProbe : IDisplayProbe
             // than throwing.
         }
 
+        // Only the display marked "main" is primary; if none is, the first.
+        if (results.Count > 0 && !results.Exists(r => r.IsPrimary))
+            results[0] = results[0] with { IsPrimary = true };
+
         return results;
     }
 
-    private static DisplayInfo? ParseDisplay(JsonElement display, bool isFirst)
+    private static DisplayInfo? ParseDisplay(JsonElement display)
     {
         string? name = display.TryGetProperty("_name", out JsonElement nameEl)
             ? nameEl.GetString()
@@ -87,7 +91,7 @@ public sealed partial class MacOsDisplayProbe : IDisplayProbe
             return null;
         }
 
-        bool isPrimary = AnyPropertyEquals(display, "spdisplays_main", "spdisplays_yes") || isFirst;
+        bool isPrimary = AnyPropertyEquals(display, "spdisplays_main", "spdisplays_yes");
         bool isBuiltin = (name is not null && name.Contains("built-in", StringComparison.OrdinalIgnoreCase)) ||
                          AnyPropertyContains(display, "built-in");
 
